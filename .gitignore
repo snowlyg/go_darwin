@@ -1,0 +1,12 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea
+dist
+.vscode
+tmp
+vendor
+
+go_darwin
+.air.conf
+protocol/api/assets.go
+godarwin.yaml
+
