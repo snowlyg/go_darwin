@@ -3,15 +3,19 @@ package main
 
 import (
 	"fmt"
+	"github.com/snowlyg/go_darwin/utils"
 	"net"
 	"os"
 	"path"
 	"runtime"
 	"time"
 
+	"github.com/go-cmd/cmd"
 	"github.com/kardianos/service"
 	log "github.com/sirupsen/logrus"
+	"github.com/snowlyg/go_darwin/client"
 	"github.com/snowlyg/go_darwin/configure"
+	"github.com/snowlyg/go_darwin/models"
 	"github.com/snowlyg/go_darwin/protocol/api"
 	"github.com/snowlyg/go_darwin/protocol/hls"
 	"github.com/snowlyg/go_darwin/protocol/httpflv"
@@ -111,6 +115,77 @@ func startAPI(stream *rtmp.RtmpStream) {
 	}
 }
 
+func startGo() {
+	server := client.GetServer()
+	go func() {
+		log.Println("start go")
+		pusher2ffmpegMap := make(map[*client.Pusher]*cmd.Cmd)
+		var pusher *client.Pusher
+		addChnOk := true
+		removeChnOk := true
+		for addChnOk || removeChnOk {
+			select {
+			case pusher, addChnOk = <-server.AddPusherCh:
+
+				log.Debugln("AddPusherCh:", pusher)
+				if addChnOk {
+					args := []string{"-re", "-i", pusher.Path, "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", utils.LocalIP(), pusher.Key)}
+					cmdOptions := cmd.Options{
+						Buffered:  false,
+						Streaming: true,
+					}
+
+					envCmd := cmd.NewCmdOptions(cmdOptions, "ffmpeg", args...)
+					doneChan := make(chan struct{})
+					go func() {
+						defer close(doneChan)
+						for envCmd.Stdout != nil || envCmd.Stderr != nil {
+							select {
+							case line, open := <-envCmd.Stdout:
+								if !open {
+									envCmd.Stdout = nil
+									continue
+								}
+								log.Println(line)
+							case line, open := <-envCmd.Stderr:
+								if !open {
+									envCmd.Stderr = nil
+									continue
+								}
+								fmt.Fprintln(os.Stderr, line)
+							}
+						}
+					}()
+
+					<-envCmd.Start()
+					<-doneChan
+				} else {
+					log.Printf("addPusherChan closed")
+				}
+			case pusher, removeChnOk = <-server.RemovePusherCh:
+				if removeChnOk {
+					cmd := pusher2ffmpegMap[pusher]
+					err := cmd.Stop()
+					if err != nil {
+						log.Printf("prepare to SIGTERM to process:%v", err)
+					}
+					delete(pusher2ffmpegMap, pusher)
+					log.Printf("delete ffmpeg from pull stream from pusher[%v]", pusher)
+				} else {
+					for _, cmd := range pusher2ffmpegMap {
+						err := cmd.Stop()
+						if err != nil {
+							log.Printf("prepare to SIGTERM to process:%v", err)
+						}
+					}
+					pusher2ffmpegMap = make(map[*client.Pusher]*cmd.Cmd)
+					log.Printf("removePusherChan closed")
+				}
+			}
+		}
+	}()
+}
+
 type program struct{}
 
 func (p *program) Start(s service.Service) error {
@@ -121,12 +196,19 @@ func (p *program) Start(s service.Service) error {
 func (p *program) run() {
 	// 执行内容
 
+	err := models.Init()
+	if err != nil {
+		return
+	}
+
 	stream := rtmp.NewRtmpStream()
+	startGo()
 	hlsServer := startHls()
 	startHTTPFlv(stream)
 	startAPI(stream)
 	startRtmp(stream, hlsServer)
 }
+
 func (p *program) Stop(s service.Service) error {
 	return nil
 }

@@ -3,9 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/snowlyg/go_darwin/client"
+	"github.com/snowlyg/go_darwin/models"
 	"net"
 	"net/http"
-	"os"
+	"strconv"
 
 	"github.com/snowlyg/go_darwin/av"
 	"github.com/snowlyg/go_darwin/configure"
@@ -15,14 +17,17 @@ import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/go-cmd/cmd"
 )
 
 type Response struct {
 	w      http.ResponseWriter
 	Status int         `json:"status"`
 	Data   interface{} `json:"data"`
+}
+
+type ReqData struct {
+	Streams []*models.Stream `json:"streams"`
+	Count   int              `json:"count"`
 }
 
 func (r *Response) SendJson() (int, error) {
@@ -115,20 +120,23 @@ func (s *Server) Serve(l net.Listener) error {
 	mux.HandleFunc("/control/pull", func(w http.ResponseWriter, r *http.Request) {
 		s.handlePull(w, r)
 	})
-	mux.HandleFunc("/control/get", func(w http.ResponseWriter, r *http.Request) {
-		s.handleGet(w, r)
+	mux.HandleFunc("/control/all", func(w http.ResponseWriter, r *http.Request) {
+		s.handleAll(w, r)
 	})
-	mux.HandleFunc("/control/reset", func(w http.ResponseWriter, r *http.Request) {
-		s.handleReset(w, r)
+	mux.HandleFunc("/control/add", func(w http.ResponseWriter, r *http.Request) {
+		s.handleAdd(w, r)
+	})
+	mux.HandleFunc("/control/update", func(w http.ResponseWriter, r *http.Request) {
+		s.handleUpdate(w, r)
+	})
+	mux.HandleFunc("/control/start", func(w http.ResponseWriter, r *http.Request) {
+		s.handleStart(w, r)
 	})
 	mux.HandleFunc("/control/delete", func(w http.ResponseWriter, r *http.Request) {
 		s.handleDelete(w, r)
 	})
 	mux.HandleFunc("/stat/livestat", func(w http.ResponseWriter, r *http.Request) {
 		s.GetLiveStatics(w, r)
-	})
-	mux.HandleFunc("/rtmp/dial", func(w http.ResponseWriter, r *http.Request) {
-		s.handleDial(w, r)
 	})
 	http.Serve(l, JWTMiddleware(mux))
 	return nil
@@ -333,8 +341,8 @@ func (s *Server) handlePush(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//http://127.0.0.1:8090/control/reset?room=ROOM_NAME
-func (s *Server) handleReset(w http.ResponseWriter, r *http.Request) {
+//http://127.0.0.1:8090/control/start?id=1
+func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 	res := &Response{
 		w:      w,
 		Data:   nil,
@@ -342,31 +350,83 @@ func (s *Server) handleReset(w http.ResponseWriter, r *http.Request) {
 	}
 	defer res.SendJson()
 
-	if err := r.ParseForm(); err != nil {
-		res.Status = 400
-		res.Data = "url: /control/reset?room=<ROOM_NAME>"
-		return
-	}
-	room := r.Form.Get("room")
+	id := r.FormValue("id")
 
-	if len(room) == 0 {
+	if len(id) == 0 {
 		res.Status = 400
-		res.Data = "url: /control/reset?room=<ROOM_NAME>"
+		res.Data = "url: /control/start?id=<ROOM_NAME>"
 		return
 	}
 
-	msg, err := configure.RoomKeys.SetKey(room)
+	stream := models.StartStream(id)
+	if stream != nil && stream.Status {
+		pusher := client.GetServer().GetPusher(stream.Source)
+		if pusher == nil {
+			pusher = client.NewPusher(stream.Source, stream.PusherId)
+		}
 
-	if err != nil {
-		msg = err.Error()
-		res.Status = 400
+		if pusher != nil {
+			log.Debugln("room_name:", stream.RoomName, "room_key:", stream.Key, "room_id:", stream.ID)
+			client.GetServer().AddPusher(pusher)
+			res.Data = "启动拉流"
+			return
+		}
 	}
 
-	res.Data = msg
+	res.Data = "拉流启动失败"
 }
 
-//http://127.0.0.1:8090/control/get?room=ROOM_NAME
-func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
+//http://127.0.0.1:8090/control/stop?room=ROOM_NAME
+func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
+	res := &Response{
+		w:      w,
+		Data:   nil,
+		Status: 200,
+	}
+	defer res.SendJson()
+
+	id := r.FormValue("id")
+
+	if len(id) == 0 {
+		res.Status = 400
+		res.Data = "url: /control/get?room=<ROOM_NAME>"
+		return
+	}
+
+	models.StopStream(id)
+
+	res.Data = "停止拉流"
+}
+
+//http://127.0.0.1:8090/control/All
+func (s *Server) handleAll(w http.ResponseWriter, r *http.Request) {
+	ot, li := 0, 10
+
+	res := &Response{
+		w:      w,
+		Data:   nil,
+		Status: 200,
+	}
+	defer res.SendJson()
+
+	offset := r.Form.Get("offset")
+	limit := r.Form.Get("limit")
+
+	if len(offset) > 0 {
+		ot, _ = strconv.Atoi(offset)
+	}
+
+	if len(limit) > 0 {
+		li, _ = strconv.Atoi(limit)
+	}
+
+	streams, count := models.GetStreams(ot, li)
+
+	res.Data = ReqData{Streams: streams, Count: count}
+}
+
+//http://127.0.0.1:8090/control/add?room=ROOM_NAME&source=ROOM_NAME
+func (s *Server) handleAdd(w http.ResponseWriter, r *http.Request) {
 	res := &Response{
 		w:      w,
 		Data:   nil,
@@ -381,6 +441,7 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	room := r.Form.Get("room")
+	source := r.Form.Get("source")
 
 	if len(room) == 0 {
 		res.Status = 400
@@ -388,42 +449,51 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg, err := configure.RoomKeys.GetKey(room)
+	key, err := configure.RoomKeys.GetKey(room)
 	if err != nil {
-		msg = err.Error()
+		key = err.Error()
 		res.Status = 400
 	}
-	args := []string{"-re", "-i", "rtmp://58.200.131.2:1935/livetv/hunantv", "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://localhost:1935/godarwin/%s", msg)}
-	cmdOptions := cmd.Options{
-		Buffered:  false,
-		Streaming: true,
+
+	models.AddStream(key, source, room)
+
+	res.Data = "添加拉流"
+}
+
+//http://127.0.0.1:8090/control/update?room=ROOM_NAME
+func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
+	res := &Response{
+		w:      w,
+		Data:   nil,
+		Status: 200,
+	}
+	defer res.SendJson()
+
+	if err := r.ParseForm(); err != nil {
+		res.Status = 400
+		res.Data = "url: /control/reset?room=<ROOM_NAME>"
+		return
 	}
 
-	envCmd := cmd.NewCmdOptions(cmdOptions, "ffmpeg",args...)
-	doneChan := make(chan struct{})
-	go func() {
-		defer close(doneChan)
-		for envCmd.Stdout != nil || envCmd.Stderr != nil {
-			select {
-			case line, open := <-envCmd.Stdout:
-				if !open {
-					envCmd.Stdout = nil
-					continue
-				}
-				fmt.Println(line)
-			case line, open := <-envCmd.Stderr:
-				if !open {
-					envCmd.Stderr = nil
-					continue
-				}
-				fmt.Fprintln(os.Stderr, line)
-			}
-		}
-	}()
+	id := r.Form.Get("id")
+	room := r.Form.Get("room")
+	source := r.Form.Get("source")
 
-	<-envCmd.Start()
-	<-doneChan
-	res.Data = "启动拉流"
+	if len(room) == 0 {
+		res.Status = 400
+		res.Data = "url: /control/reset?room=<ROOM_NAME>"
+		return
+	}
+
+	key, err := configure.RoomKeys.SetKey(room)
+	if err != nil {
+		key = err.Error()
+		res.Status = 400
+	}
+
+	models.UpdateStream(id, key, source)
+
+	res.Data = "更新拉流"
 }
 
 //http://127.0.0.1:8090/control/delete?room=ROOM_NAME
@@ -441,6 +511,7 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id := r.Form.Get("id")
 	room := r.Form.Get("room")
 
 	if len(room) == 0 {
@@ -453,25 +524,9 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		res.Data = "Ok"
 		return
 	}
+
+	models.DeleteStream(id)
+
 	res.Status = 404
 	res.Data = "room not found"
-}
-
-//http://127.0.0.1:8090/rtmp/dial
-func (s *Server) handleDial(w http.ResponseWriter, r *http.Request) {
-	res := &Response{
-		w:      w,
-		Data:   nil,
-		Status: 200,
-	}
-	defer res.SendJson()
-
-	client := rtmp.NewRtmpClient(nil, nil)
-	url := "rtmp://58.200.131.2:1935/livetv/hunantv"
-	err := client.Dial(url, "play")
-	if err != nil {
-		res.Status = 500
-		res.Data = err.Error()
-	}
-
 }
