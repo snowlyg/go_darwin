@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/snowlyg/go_darwin/configure"
 	"github.com/snowlyg/go_darwin/utils/db"
 	"github.com/snowlyg/go_darwin/utils/uid"
 
@@ -33,8 +34,8 @@ func GetStream(Sid string) Stream {
 	return stream
 }
 
-func AddStream(key, source, roomName string) *Stream {
-	stream := Stream{Status: false, PusherId: uid.NewId(), Key: key, RoomName: roomName, Source: source}
+func AddStream(source, roomName string) *Stream {
+	stream := Stream{Status: false, PusherId: uid.NewId(), RoomName: roomName, Source: source}
 	db.SQLite.Create(&stream)
 	return &stream
 }
@@ -42,14 +43,18 @@ func AddStream(key, source, roomName string) *Stream {
 func UpdateStream(Sid, roomName, source string) {
 	id, _ := strconv.ParseUint(Sid, 10, 64)
 	stream := Stream{Model: gorm.Model{ID: uint(id)}}
-	db.SQLite.Model(&stream).Updates(Stream{Key: roomName, Source: source})
+	db.SQLite.Model(&stream).Updates(Stream{RoomName: roomName, Source: source})
 }
 
 func StartStream(Sid string) *Stream {
 	id, _ := strconv.ParseUint(Sid, 10, 64)
 	stream := &Stream{Model: gorm.Model{ID: uint(id)}}
+
+	key, _ := configure.RoomKeys.GetKey(stream.RoomName)
+
 	db.SQLite.First(&stream)
 	stream.Status = true
+	stream.Key = key
 	db.SQLite.Save(&stream)
 
 	return stream
@@ -60,6 +65,7 @@ func StopStream(Sid string) {
 	stream := &Stream{Model: gorm.Model{ID: uint(id)}}
 	db.SQLite.First(&stream)
 	stream.Status = false
+	stream.Key = ""
 	db.SQLite.Save(&stream)
 }
 

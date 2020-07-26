@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/snowlyg/go_darwin/utils"
 	"net"
 	"os"
 	"path"
@@ -129,7 +128,7 @@ func startGo() {
 
 				log.Debugln("AddPusherCh:", pusher)
 				if addChnOk {
-					args := []string{"-re", "-i", pusher.Path, "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", utils.LocalIP(), pusher.Key)}
+					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", "rtsp://222.133.29.218:9090/dss/monitor/param?cameraid=1000096%240&substream=1"), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "localhost", pusher.Key)}
 					cmdOptions := cmd.Options{
 						Buffered:  false,
 						Streaming: true,

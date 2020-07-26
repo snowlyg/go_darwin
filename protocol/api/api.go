@@ -360,9 +360,10 @@ func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 
 	stream := models.StartStream(id)
 	if stream != nil && stream.Status {
+
 		pusher := client.GetServer().GetPusher(stream.Source)
 		if pusher == nil {
-			pusher = client.NewPusher(stream.Source, stream.PusherId)
+			pusher = client.NewPusher(stream.Key, stream.Source, stream.PusherId)
 		}
 
 		if pusher != nil {
@@ -449,13 +450,7 @@ func (s *Server) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key, err := configure.RoomKeys.GetKey(room)
-	if err != nil {
-		key = err.Error()
-		res.Status = 400
-	}
-
-	models.AddStream(key, source, room)
+	models.AddStream(source, room)
 
 	res.Data = "添加拉流"
 }

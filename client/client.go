@@ -12,8 +12,9 @@ type Pusher struct {
 	Id   string
 }
 
-func NewPusher(path, id string) (pusher *Pusher) {
+func NewPusher(key, path, id string) (pusher *Pusher) {
 	pusher = &Pusher{
+		Key:  key,
 		Path: path,
 		Id:   id,
 	}
