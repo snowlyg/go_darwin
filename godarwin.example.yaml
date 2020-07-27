@@ -1,5 +1,5 @@
 # # Logger level
-level: debug
+level: info
 
 # # FLV Options
 flv_dir: "./tmp"

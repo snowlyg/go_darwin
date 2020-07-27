@@ -6,6 +6,7 @@ tmp
 vendor
 
 go_darwin
+go_darwin.*
 .air.conf
 protocol/api/assets.go
 godarwin.yaml

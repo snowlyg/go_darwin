@@ -112,7 +112,7 @@ func (s *Server) Serve(l net.Listener) error {
 	mux := http.NewServeMux()
 
 	mux.Handle("/statics/", http.StripPrefix("/statics/", http.FileServer(http.Dir("statics"))))
-	mux.Handle("/", http.FileServer(FS))
+	//mux.Handle("/", http.FileServer(FS))
 
 	mux.HandleFunc("/control/push", func(w http.ResponseWriter, r *http.Request) {
 		s.handlePush(w, r)
@@ -358,16 +358,20 @@ func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stream := models.StartStream(id)
-	if stream != nil && stream.Status {
+	stream, err := models.StartStream(id)
+	if err != nil {
+		res.Status = 400
+		res.Data = err.Error()
+		return
+	}
 
+	if stream != nil && stream.Status {
 		pusher := client.GetServer().GetPusher(stream.Source)
 		if pusher == nil {
 			pusher = client.NewPusher(stream.Key, stream.Source, stream.PusherId)
 		}
-
 		if pusher != nil {
-			log.Debugln("room_name:", stream.RoomName, "room_key:", stream.Key, "room_id:", stream.ID)
+			log.Debugln("room_name:", stream.RoomName, "key:", stream.Key, "room_id:", stream.ID)
 			client.GetServer().AddPusher(pusher)
 			res.Data = "启动拉流"
 			return
