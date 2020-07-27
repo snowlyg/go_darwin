@@ -61,10 +61,10 @@ func StartStream(Sid string) (*Stream, error) {
 	if err != nil {
 		return nil, err
 	}
-	stream := &Stream{Model: gorm.Model{ID: uint(id)}}
 
-	if db.SQLite.First(&stream).RecordNotFound() {
-		return nil, errors.New(fmt.Sprintf("拉流数据不存在, key：%s", stream.Key))
+	stream := new(Stream)
+	if db.SQLite.Where("id = ?", id).First(stream).RecordNotFound() {
+		return nil, errors.New(fmt.Sprintf("拉流数据不存在, key：%v", stream))
 	}
 
 	key, err := configure.RoomKeys.GetKey(stream.RoomName)
@@ -74,7 +74,7 @@ func StartStream(Sid string) (*Stream, error) {
 
 	stream.Status = true
 	stream.Key = key
-	db.SQLite.Save(&stream)
+	db.SQLite.Save(stream)
 
 	return stream, nil
 }
@@ -84,15 +84,15 @@ func StopStream(Sid string) error {
 	if err != nil {
 		return err
 	}
-	stream := &Stream{Model: gorm.Model{ID: uint(id)}}
 
-	if db.SQLite.First(&stream).RecordNotFound() {
-		return errors.New(fmt.Sprintf("拉流数据不存在, id：%s", Sid))
+	stream := new(Stream)
+	if db.SQLite.Where("id = ?", id).First(stream).RecordNotFound() {
+		return errors.New(fmt.Sprintf("拉流数据不存在, key：%v", stream))
 	}
 
 	stream.Status = false
 	stream.Key = ""
-	db.SQLite.Save(&stream)
+	db.SQLite.Save(stream)
 
 	return nil
 }
