@@ -9,7 +9,7 @@
       highlight-current-row>
       <el-table-column align="center" label="ID" width="95">
         <template slot-scope="scope">
-          {{ scope.IDSelector0 }}
+          {{ scope.ID }}
         </template>
       </el-table-column>
       <el-table-column label="Key" >
