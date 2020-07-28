@@ -20,9 +20,9 @@ type Stream struct {
 	Source   string `gorm:"type:varchar(256)"`
 }
 
-func GetStreams(offset, limit int) ([]*Stream, int) {
+func GetStreams(offset, limit int) ([]*Stream, int64) {
 	var streams []*Stream
-	var count int
+	var count int64
 	db.SQLite.Find(&streams).Count(&count)
 	db.SQLite.Offset(offset).Limit(limit).Order("id desc").Find(&streams)
 	return streams, count

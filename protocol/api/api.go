@@ -128,19 +128,19 @@ func (s *Server) Serve(l net.Listener) error {
 	mux.HandleFunc("/control/pull", func(w http.ResponseWriter, r *http.Request) {
 		s.handlePull(w, r)
 	})
-	mux.HandleFunc("/control/all", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/control/all", func(w http.ResponseWriter, r *http.Request) {
 		s.handleAll(w, r)
 	})
-	mux.HandleFunc("/control/add", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/control/add", func(w http.ResponseWriter, r *http.Request) {
 		s.handleAdd(w, r)
 	})
-	mux.HandleFunc("/control/update", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/control/update", func(w http.ResponseWriter, r *http.Request) {
 		s.handleUpdate(w, r)
 	})
-	mux.HandleFunc("/control/start", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/control/start", func(w http.ResponseWriter, r *http.Request) {
 		s.handleStart(w, r)
 	})
-	mux.HandleFunc("/control/delete", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/control/delete", func(w http.ResponseWriter, r *http.Request) {
 		s.handleDelete(w, r)
 	})
 	mux.HandleFunc("/stat/livestat", func(w http.ResponseWriter, r *http.Request) {
@@ -171,6 +171,7 @@ func (server *Server) GetLiveStatics(w http.ResponseWriter, req *http.Request) {
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 
 	defer res.SendJson()
@@ -364,6 +365,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
 
@@ -383,7 +385,6 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	tokenReq := TokenReq{"admin-token"}
 	res.Data = tokenReq
-	res.Code = 20000
 }
 
 type Admin struct {
@@ -398,6 +399,7 @@ func (s *Server) handleInfo(w http.ResponseWriter, r *http.Request) {
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
 
@@ -417,19 +419,25 @@ func (s *Server) handleInfo(w http.ResponseWriter, r *http.Request) {
 
 	admin := Admin{"https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif", "I am a super administrator", "Super Admin"}
 	res.Data = admin
-	res.Code = 20000
 }
 
-//http://127.0.0.1:8090/control/start?id=1
+//http://127.0.0.1:8090/stage-api/control/start?id=1
 func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 	res := &Response{
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
 
-	id := r.FormValue("id")
+	if err := r.ParseForm(); err != nil {
+		res.Status = 400
+		res.Data = "url: /control/get?room=<ROOM_NAME>"
+		return
+	}
+
+	id := r.Form.Get("id")
 
 	if len(id) == 0 {
 		res.Status = 400
@@ -460,16 +468,23 @@ func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 	res.Data = "拉流启动失败"
 }
 
-//http://127.0.0.1:8090/control/stop?room=ROOM_NAME
+//http://127.0.0.1:8090/stage-api/control/stop?room=ROOM_NAME
 func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
 	res := &Response{
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
 
-	id := r.FormValue("id")
+	if err := r.ParseForm(); err != nil {
+		res.Status = 400
+		res.Data = "url: /control/get?room=<ROOM_NAME>"
+		return
+	}
+
+	id := r.Form.Get("id")
 
 	if len(id) == 0 {
 		res.Status = 400
@@ -482,7 +497,12 @@ func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
 	res.Data = "停止拉流"
 }
 
-//http://127.0.0.1:8090/control/All
+type TableList struct {
+	Items []*models.Stream `json:"items"`
+	Total int64            `json:"total"`
+}
+
+//http://127.0.0.1:8090/stage-api/control/All
 func (s *Server) handleAll(w http.ResponseWriter, r *http.Request) {
 	ot, li := 0, 10
 
@@ -490,8 +510,15 @@ func (s *Server) handleAll(w http.ResponseWriter, r *http.Request) {
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
+
+	if err := r.ParseForm(); err != nil {
+		res.Status = 400
+		res.Data = "url: /control/get?room=<ROOM_NAME>"
+		return
+	}
 
 	offset := r.Form.Get("offset")
 	limit := r.Form.Get("limit")
@@ -505,8 +532,8 @@ func (s *Server) handleAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	streams, count := models.GetStreams(ot, li)
-
-	res.Data = ReqData{Streams: streams, Count: count}
+	tableList := TableList{streams, count}
+	res.Data = tableList
 }
 
 //http://127.0.0.1:8090/control/add?room=ROOM_NAME&source=ROOM_NAME
@@ -515,6 +542,7 @@ func (s *Server) handleAdd(w http.ResponseWriter, r *http.Request) {
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
 
@@ -544,6 +572,7 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
 
@@ -580,6 +609,7 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		w:      w,
 		Data:   nil,
 		Status: 200,
+		Code:   20000,
 	}
 	defer res.SendJson()
 
