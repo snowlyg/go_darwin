@@ -128,19 +128,19 @@ func (s *Server) Serve(l net.Listener) error {
 	mux.HandleFunc("/control/pull", func(w http.ResponseWriter, r *http.Request) {
 		s.handlePull(w, r)
 	})
-	mux.HandleFunc("/stage-api/table/list", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/article/list", func(w http.ResponseWriter, r *http.Request) {
 		s.handleAll(w, r)
 	})
-	mux.HandleFunc("/stage-api/control/add", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/article/create", func(w http.ResponseWriter, r *http.Request) {
 		s.handleAdd(w, r)
 	})
-	mux.HandleFunc("/stage-api/control/update", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/article/update", func(w http.ResponseWriter, r *http.Request) {
 		s.handleUpdate(w, r)
 	})
-	mux.HandleFunc("/stage-api/control/start", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/article/start", func(w http.ResponseWriter, r *http.Request) {
 		s.handleStart(w, r)
 	})
-	mux.HandleFunc("/stage-api/control/delete", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/article/delete", func(w http.ResponseWriter, r *http.Request) {
 		s.handleDelete(w, r)
 	})
 	mux.HandleFunc("/stat/livestat", func(w http.ResponseWriter, r *http.Request) {
