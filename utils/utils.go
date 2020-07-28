@@ -83,22 +83,6 @@ func ErrorLogFilename() string {
 	return filepath.Join(LogDir(), fmt.Sprintf("%s-error.log", strings.ToLower(EXEName())))
 }
 
-var FlagVarConfFile string
-
-func ConfFile() string {
-	if FlagVarConfFile != "" {
-		return FlagVarConfFile
-	}
-	if Exist(ConfFileDev()) {
-		return ConfFileDev()
-	}
-	return filepath.Join(CWD(), strings.ToLower(EXEName())+".ini")
-}
-
-func ConfFileDev() string {
-	return filepath.Join(CWD(), strings.ToLower(EXEName())+".dev.ini")
-}
-
 var FlagVarDBFile string
 
 func DBFile() string {
@@ -108,6 +92,7 @@ func DBFile() string {
 	if Exist(DBFileDev()) {
 		return DBFileDev()
 	}
+
 	return filepath.Join(CWD(), strings.ToLower(EXEName()+".db"))
 }
 

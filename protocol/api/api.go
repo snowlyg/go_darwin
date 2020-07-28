@@ -128,7 +128,7 @@ func (s *Server) Serve(l net.Listener) error {
 	mux.HandleFunc("/control/pull", func(w http.ResponseWriter, r *http.Request) {
 		s.handlePull(w, r)
 	})
-	mux.HandleFunc("/stage-api/control/all", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/stage-api/table/list", func(w http.ResponseWriter, r *http.Request) {
 		s.handleAll(w, r)
 	})
 	mux.HandleFunc("/stage-api/control/add", func(w http.ResponseWriter, r *http.Request) {
