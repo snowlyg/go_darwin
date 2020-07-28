@@ -230,7 +230,7 @@ func main() {
 		}
 	}()
 
-	log.Infof(` 
+	fmt.Println(fmt.Sprintf(` 
 ====================================================
   ____  ___  ____    _    ______        _____ _   _ 
  / ___|/ _ \|  _ \  / \  |  _ \ \      / /_ _| \ | |
@@ -240,8 +240,7 @@ func main() {
 
 ====================================================
 
-version: %s
-	`, VERSION)
+version: %s`, VERSION))
 
 	svcConfig := &service.Config{
 		Name:        "godarwin",

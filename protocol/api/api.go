@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/snowlyg/go_darwin/client"
 	"github.com/snowlyg/go_darwin/models"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"strconv"
@@ -22,6 +23,7 @@ import (
 type Response struct {
 	w      http.ResponseWriter
 	Status int         `json:"status"`
+	Code   int         `json:"code"`
 	Data   interface{} `json:"data"`
 }
 
@@ -112,8 +114,14 @@ func (s *Server) Serve(l net.Listener) error {
 	mux := http.NewServeMux()
 
 	mux.Handle("/statics/", http.StripPrefix("/statics/", http.FileServer(http.Dir("statics"))))
-	//mux.Handle("/", http.FileServer(FS))
+	mux.Handle("/", http.FileServer(FS))
 
+	mux.HandleFunc("/stage-api/user/login", func(w http.ResponseWriter, r *http.Request) {
+		s.handleLogin(w, r)
+	})
+	mux.HandleFunc("/stage-api/user/info", func(w http.ResponseWriter, r *http.Request) {
+		s.handleInfo(w, r)
+	})
 	mux.HandleFunc("/control/push", func(w http.ResponseWriter, r *http.Request) {
 		s.handlePush(w, r)
 	})
@@ -339,6 +347,77 @@ func (s *Server) handlePush(w http.ResponseWriter, req *http.Request) {
 		res.Data = retString
 		log.Debugf("push start return %s", retString)
 	}
+}
+
+type LoginInfo struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type TokenReq struct {
+	Token string `json:"token"`
+}
+
+//http://127.0.0.1:8090/user/login post
+func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
+	res := &Response{
+		w:      w,
+		Data:   nil,
+		Status: 200,
+	}
+	defer res.SendJson()
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		res.Data = fmt.Sprintf("read body err, %v\n", err)
+		return
+	}
+
+	var loginInfo LoginInfo
+
+	_ = json.Unmarshal(body, &loginInfo)
+	if err != nil {
+		res.Data = fmt.Sprintf("read body json.Unmarshal err, %v\n", err)
+		return
+	}
+
+	tokenReq := TokenReq{"admin-token"}
+	res.Data = tokenReq
+	res.Code = 20000
+}
+
+type Admin struct {
+	Avatar       string `json:"avatar"`       //"https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+	Introduction string `json:"introduction"` // "I am a super administrator"
+	Name         string `json:"name"`         // "Super Admin"
+}
+
+//http://127.0.0.1:8090/user/info post
+func (s *Server) handleInfo(w http.ResponseWriter, r *http.Request) {
+	res := &Response{
+		w:      w,
+		Data:   nil,
+		Status: 200,
+	}
+	defer res.SendJson()
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		res.Data = fmt.Sprintf("read body err, %v\n", err)
+		return
+	}
+
+	var loginInfo LoginInfo
+
+	_ = json.Unmarshal(body, &loginInfo)
+	if err != nil {
+		res.Data = fmt.Sprintf("read body json.Unmarshal err, %v\n", err)
+		return
+	}
+
+	admin := Admin{"https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif", "I am a super administrator", "Super Admin"}
+	res.Data = admin
+	res.Code = 20000
 }
 
 //http://127.0.0.1:8090/control/start?id=1
