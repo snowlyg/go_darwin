@@ -3,7 +3,6 @@
 dist
 .vscode
 tmp
-vendor
 
 go_darwin
 go_darwin.*

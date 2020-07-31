@@ -1,8 +1,9 @@
-//go:generate go run -tags generate protocol/api/gen.go
+//go:generate go run -tags generate protocol/router/gen.go
 package main
 
 import (
 	"fmt"
+	"github.com/snowlyg/go_darwin/protocol/router"
 	"net"
 	"os"
 	"path"
@@ -15,7 +16,6 @@ import (
 	"github.com/snowlyg/go_darwin/client"
 	"github.com/snowlyg/go_darwin/configure"
 	"github.com/snowlyg/go_darwin/models"
-	"github.com/snowlyg/go_darwin/protocol/api"
 	"github.com/snowlyg/go_darwin/protocol/hls"
 	"github.com/snowlyg/go_darwin/protocol/httpflv"
 	"github.com/snowlyg/go_darwin/protocol/rtmp"
@@ -101,7 +101,7 @@ func startAPI(stream *rtmp.RtmpStream) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		opServer := api.NewServer(stream, rtmpAddr)
+		opServer := router.NewServer(stream, rtmpAddr)
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {
