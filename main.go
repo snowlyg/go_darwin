@@ -6,8 +6,7 @@ import (
 	"github.com/snowlyg/go_darwin/protocol/router"
 	"net"
 	"os"
-	"path"
-	"runtime"
+	"strings"
 	"time"
 
 	"github.com/go-cmd/cmd"
@@ -22,7 +21,6 @@ import (
 )
 
 var VERSION = "master"
-var logger service.Logger
 
 func startHls() *hls.Server {
 	hlsAddr := configure.Config.GetString("hls_addr")
@@ -63,7 +61,6 @@ func startRtmp(stream *rtmp.RtmpStream, hlsServer *hls.Server) {
 		rtmpServer = rtmp.NewRtmpServer(stream, hlsServer)
 		log.Info("HLS server enable....")
 	}
-
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("RTMP server panic: ", r)
@@ -95,11 +92,10 @@ func startHTTPFlv(stream *rtmp.RtmpStream) {
 
 func startAPI(stream *rtmp.RtmpStream) {
 	apiAddr := configure.Config.GetString("api_addr")
-
 	if apiAddr != "" {
 		opListen, err := net.Listen("tcp", apiAddr)
 		if err != nil {
-			log.Fatal(err)
+			log.Info(err)
 		}
 		opServer := router.NewServer(stream, rtmpAddr)
 		go func() {
@@ -125,10 +121,13 @@ func startGo() {
 		for addChnOk || removeChnOk {
 			select {
 			case pusher, addChnOk = <-server.AddPusherCh:
-
 				log.Debugln("AddPusherCh:", pusher)
 				if addChnOk {
-					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", "rtsp://222.133.29.218:9090/dss/monitor/param?cameraid=1000096%240&substream=1"), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "localhost", pusher.Key)}
+					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "localhost", pusher.Key)}
+					if strings.Contains(pusher.Path, "rtmp") {
+						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "localhost", pusher.Key)}
+					}
+
 					cmdOptions := cmd.Options{
 						Buffered:  false,
 						Streaming: true,
@@ -163,18 +162,23 @@ func startGo() {
 				}
 			case pusher, removeChnOk = <-server.RemovePusherCh:
 				if removeChnOk {
-					cmd := pusher2ffmpegMap[pusher]
-					err := cmd.Stop()
-					if err != nil {
-						log.Printf("prepare to SIGTERM to process:%v", err)
-					}
-					delete(pusher2ffmpegMap, pusher)
-					log.Printf("delete ffmpeg from pull stream from pusher[%v]", pusher)
-				} else {
-					for _, cmd := range pusher2ffmpegMap {
-						err := cmd.Stop()
+					goCmd := pusher2ffmpegMap[pusher]
+					if goCmd != nil {
+						err := goCmd.Stop()
 						if err != nil {
 							log.Printf("prepare to SIGTERM to process:%v", err)
+						}
+						delete(pusher2ffmpegMap, pusher)
+					}
+
+					log.Printf("delete ffmpeg from pull stream from pusher[%v]", pusher)
+				} else {
+					for _, goCmd := range pusher2ffmpegMap {
+						if goCmd != nil {
+							err := goCmd.Stop()
+							if err != nil {
+								log.Printf("prepare to SIGTERM to process:%v", err)
+							}
 						}
 					}
 					pusher2ffmpegMap = make(map[*client.Pusher]*cmd.Cmd)
@@ -194,15 +198,14 @@ func (p *program) Start(s service.Service) error {
 }
 func (p *program) run() {
 	// 执行内容
-
 	err := models.Init()
 	if err != nil {
 		return
 	}
 
 	stream := rtmp.NewRtmpStream()
-	startGo()
 	hlsServer := startHls()
+	startGo()
 	startHTTPFlv(stream)
 	startAPI(stream)
 	startRtmp(stream, hlsServer)
@@ -213,13 +216,15 @@ func (p *program) Stop(s service.Service) error {
 }
 
 func init() {
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp: true,
-		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
-			filename := path.Base(f.File)
-			return fmt.Sprintf("%s()", f.Function), fmt.Sprintf(" %s:%d", filename, f.Line)
-		},
-	})
+	// Log as JSON instead of the default ASCII formatter.
+	log.SetFormatter(&log.JSONFormatter{})
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+
+	// Only log the warning severity or above.
+	log.SetLevel(log.WarnLevel)
 }
 
 func main() {
@@ -251,23 +256,19 @@ version: %s`, VERSION))
 	prg := &program{}
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	if len(os.Args) > 1 {
 		err = service.Control(s, os.Args[1])
 		if err != nil {
-			log.Fatal(err)
+			log.Error(err)
 		}
 		return
 	}
 
-	logger, err = s.Logger(nil)
-	if err != nil {
-		log.Fatal(err)
-	}
 	err = s.Run()
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 	}
 }

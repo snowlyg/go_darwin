@@ -16,7 +16,7 @@ type Stream struct {
 	Status   bool
 	PusherId string `gorm:"type:varchar(256)"`
 	RoomName string `gorm:"type:varchar(256);unique"`
-	Key      string `gorm:"type:varchar(256);unique"`
+	Key      string `gorm:"type:varchar(256)"`
 	Source   string `gorm:"type:varchar(256)"`
 }
 
@@ -39,10 +39,12 @@ func GetStream(Sid string) (*Stream, error) {
 	return &stream, nil
 }
 
-func AddStream(source, roomName string) *Stream {
+func AddStream(source, roomName string) (*Stream, error) {
 	stream := Stream{Status: false, PusherId: uid.NewId(), RoomName: roomName, Source: source}
-	db.SQLite.Create(&stream)
-	return &stream
+	if err := db.SQLite.Create(&stream).Error; err != nil {
+		return nil, err
+	}
+	return &stream, nil
 }
 
 func UpdateStream(Sid, roomName, source string) error {
@@ -56,12 +58,7 @@ func UpdateStream(Sid, roomName, source string) error {
 	return nil
 }
 
-func StartStream(Sid string) (*Stream, error) {
-	id, err := strconv.ParseUint(Sid, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
+func StartStream(id uint) (*Stream, error) {
 	stream := new(Stream)
 	if db.SQLite.Where("id = ?", id).First(stream).RecordNotFound() {
 		return nil, errors.New(fmt.Sprintf("拉流数据不存在, key：%v", stream))
@@ -79,26 +76,23 @@ func StartStream(Sid string) (*Stream, error) {
 	return stream, nil
 }
 
-func StopStream(Sid string) error {
-	id, err := strconv.ParseUint(Sid, 10, 64)
-	if err != nil {
-		return err
-	}
-
+func StopStream(id uint) (*Stream, error) {
 	stream := new(Stream)
 	if db.SQLite.Where("id = ?", id).First(stream).RecordNotFound() {
-		return errors.New(fmt.Sprintf("拉流数据不存在, key：%v", stream))
+		return nil, errors.New(fmt.Sprintf("拉流数据不存在, key：%v", stream))
 	}
 
 	stream.Status = false
 	stream.Key = ""
 	db.SQLite.Save(stream)
 
-	return nil
+	return stream, nil
 }
 
-func DeleteStream(Sid string) {
-	id, _ := strconv.ParseUint(Sid, 10, 64)
-	stream := Stream{Model: gorm.Model{ID: uint(id)}}
-	db.SQLite.Delete(&stream)
+func DeleteStream(id uint) error {
+	stream := Stream{Model: gorm.Model{ID: id}}
+	if err := db.SQLite.Delete(&stream).Error; err != nil {
+		return err
+	}
+	return nil
 }
