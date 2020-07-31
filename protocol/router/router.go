@@ -8,7 +8,6 @@ import (
 	"github.com/snowlyg/go_darwin/client"
 	"github.com/snowlyg/go_darwin/models"
 	"net"
-	"net/http"
 )
 
 type Server struct {
@@ -20,8 +19,14 @@ func NewServer(h av.Handler, rtmpAddr string) *Server {
 
 func (s *Server) Serve(l net.Listener) error {
 	app := iris.Default()
-	//app.Get("/statics/", iris.FromStd(http.FileServer(http.Dir("statics"))))
-	app.Get("/", iris.FromStd(http.FileServer(FS)))
+	app.HandleDir("/static", iris.Dir("./www/dist/static"))
+	app.RegisterView(iris.HTML("./www/dist", ".html"))
+
+	// Method:    GET
+	// Resource:  http://localhost:8080
+	app.Get("/", func(ctx iris.Context) {
+		ctx.View("index.html")
+	})
 
 	//c := cors.New(cors.Options{
 	//	AllowedOrigins:   []string{"*"},
