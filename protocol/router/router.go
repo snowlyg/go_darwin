@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/kataras/iris/v12"
-	"github.com/rs/cors"
+	//"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"github.com/snowlyg/go_darwin/av"
 	"github.com/snowlyg/go_darwin/client"
@@ -20,17 +20,17 @@ func NewServer(h av.Handler, rtmpAddr string) *Server {
 
 func (s *Server) Serve(l net.Listener) error {
 	app := iris.Default()
-	app.Get("/statics/", iris.FromStd(http.FileServer(http.Dir("statics"))))
-	//app.Get("/", iris.FromStd(http.FileServer(FS)))
+	//app.Get("/statics/", iris.FromStd(http.FileServer(http.Dir("statics"))))
+	app.Get("/", iris.FromStd(http.FileServer(FS)))
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowCredentials: true,
-		AllowedHeaders:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
-		Debug:            true,
-	})
-	app.WrapRouter(c.ServeHTTP)
+	//c := cors.New(cors.Options{
+	//	AllowedOrigins:   []string{"*"},
+	//	AllowCredentials: true,
+	//	AllowedHeaders:   []string{"*"},
+	//	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+	//	Debug:            true,
+	//})
+	//app.WrapRouter(c.ServeHTTP)
 	app.Get("/stage-api/vue-element-admin/article/list", listData)
 	app.Get("/stage-api/vue-element-admin/user/info", userInfo)
 	app.Post("/stage-api/vue-element-admin/user/login", login)

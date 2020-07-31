@@ -98,6 +98,9 @@
           <el-button v-if="row.Status" size="mini" type="success" @click="handleStop(row)">
             停止
           </el-button>
+          <el-button v-if="row.Status" size="mini" type="warning" @click="handlePlay(row)">
+            播放
+          </el-button>
           <el-button v-if="!row.Status" size="mini" @click="handleStart(row)">
             启动
           </el-button>
@@ -126,11 +129,11 @@
         style="width: 400px; margin-left:50px;"
       >
 
-        <el-form-item label="频道名称" prop="roomName">
-          <el-input v-model="temp.roomName" />
+        <el-form-item label="频道名称" prop="RoomName">
+          <el-input v-model="temp.RoomName" />
         </el-form-item>
-        <el-form-item label="拉流地址" prop="source">
-          <el-input v-model="temp.source" />
+        <el-form-item label="拉流地址" prop="Source">
+          <el-input v-model="temp.Source" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -152,6 +155,18 @@
         <el-button type="primary" @click="dialogPvVisible = false">Confirm</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog :visible.sync="dialogPlayVisible" title="视频播放">
+      <div class="box-card">
+        <video id="videoElement" controls="true" height="100%" width="100%" />
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button class="pan-btn blue-btn" @click="handleInit">初始化</el-button>
+        <el-button class="pan-btn light-blue-btn" @click="play">播放</el-button>
+        <el-button class="pan-btn pink-btn" @click="pause">暂停</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -168,6 +183,7 @@ import {
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+import flvPlayer from 'flv.js'
 
 const calendarTypeOptions = [
   { key: 'CN', display_name: 'China' },
@@ -218,8 +234,8 @@ export default {
       statusOptions: ['published', 'draft', 'deleted'],
       showReviewer: false,
       temp: {
-        source: '',
-        roomName: ''
+        Source: '',
+        RoomName: ''
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -230,18 +246,27 @@ export default {
       dialogPvVisible: false,
       pvData: [],
       rules: {
-        // type: [{ required: true, message: 'type is required', trigger: 'change' }],
-        // timestamp: [{ type: 'date', required: true, message: 'timestamp is required', trigger: 'change' }],
-        roomName: [{ required: true, message: '频道名称必填', trigger: 'blur' }],
-        source: [{ required: true, message: '拉流地址必填', trigger: 'blur' }]
+        RoomName: [{ required: true, message: '频道名称必填', trigger: 'blur' }],
+        Source: [{ required: true, message: '拉流地址必填', trigger: 'blur' }]
       },
-      downloadLoading: false
+      downloadLoading: false,
+      dialogPlayVisible: false,
+      flvPlayer: null
     }
   },
   created() {
     this.getList()
   },
+  mounted() {
+
+  },
   methods: {
+    play() {
+      this.flvPlayer.play()
+    },
+    pause() {
+      this.flvPlayer.pause()
+    },
     getList() {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
@@ -327,12 +352,27 @@ export default {
     },
     handleUpdate(row) {
       this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
+    },
+    handlePlay(row) {
+      this.dialogPlayVisible = true
+      if (flvPlayer.isSupported()) {
+        this.flvPlayer = flvPlayer.createPlayer({
+          url: `http://localhost:7001/godarwin/${row.RoomName}.flv`,
+          type: 'flv'
+        })
+      }
+    },
+    handleInit() {
+      if (this.dialogPlayVisible && flvPlayer.isSupported()) {
+        var videoElement = document.getElementById('videoElement')
+        this.flvPlayer.attachMediaElement(videoElement)
+        this.flvPlayer.load()
+      }
     },
     updateData() {
       this.$refs['dataForm'].validate((valid) => {
