@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/snowlyg/go_darwin/configure"
+	"github.com/snowlyg/go_darwin/utils"
 	"github.com/snowlyg/go_darwin/utils/db"
 	"github.com/snowlyg/go_darwin/utils/uid"
-
 	"strconv"
 )
 
@@ -42,7 +42,7 @@ func GetStream(Sid string) (*Stream, error) {
 }
 
 func AddStream(source string) (*Stream, error) {
-	roomName := uid.NewId()
+	roomName := utils.MD5(uid.NewId())
 	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), roomName)
 	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), roomName)
 	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.Get("play_rtmp_addr"), roomName)

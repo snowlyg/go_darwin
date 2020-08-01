@@ -7,16 +7,16 @@ import (
 )
 
 type Pusher struct {
-	Key  string
-	Path string
-	Id   string
+	Key    string
+	Path   string
+	Source string
 }
 
 func NewPusher(key, path, id string) (pusher *Pusher) {
 	pusher = &Pusher{
-		Key:  key,
-		Path: path,
-		Id:   id,
+		Key:    key,
+		Path:   path,
+		Source: id,
 	}
 	return
 }
@@ -59,7 +59,7 @@ func (server *Server) AddPusher(pusher *Pusher) bool {
 func (server *Server) RemovePusher(pusher *Pusher) {
 	removed := false
 	server.PushersLock.Lock()
-	if _pusher, ok := server.Pushers[pusher.Path]; ok && pusher.Id == _pusher.Id {
+	if _pusher, ok := server.Pushers[pusher.Path]; ok && pusher.Source == _pusher.Source {
 		delete(server.Pushers, pusher.Path)
 		log.Printf("%v end, now pusher size[%d]\n", pusher, len(server.Pushers))
 		removed = true

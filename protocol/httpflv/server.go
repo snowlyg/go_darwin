@@ -81,12 +81,12 @@ func (server *Server) getStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp, _ := json.Marshal(msgs)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(resp)
 }
 
 func (server *Server) handleConn(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("http flv handleConn panic: ", r)
@@ -127,9 +127,7 @@ func (server *Server) handleConn(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	writer := NewFLVWriter(paths[0], paths[1], url, w)
-
 	server.handler.HandleWriter(writer)
 	writer.Wait()
 }

@@ -122,10 +122,12 @@ func startGo() {
 			case pusher, addChnOk = <-server.AddPusherCh:
 				log.Println("AddPusherCh:", pusher)
 				if addChnOk {
-					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
-					if strings.Contains(pusher.Path, "rtmp") {
-						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+					if strings.Contains(pusher.Source, "rtmp") {
+						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
 					}
+
+					fmt.Println(args)
 
 					cmdOptions := cmd.Options{
 						Buffered:  false,
