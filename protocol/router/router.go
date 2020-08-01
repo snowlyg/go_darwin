@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/kataras/iris/v12"
+	"github.com/rs/cors"
 	//"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"github.com/snowlyg/go_darwin/av"
@@ -22,20 +23,18 @@ func (s *Server) Serve(l net.Listener) error {
 	app.HandleDir("/static", iris.Dir("./www/dist/static"))
 	app.RegisterView(iris.HTML("./www/dist", ".html"))
 
-	// Method:    GET
-	// Resource:  http://localhost:8080
 	app.Get("/", func(ctx iris.Context) {
 		ctx.View("index.html")
 	})
 
-	//c := cors.New(cors.Options{
-	//	AllowedOrigins:   []string{"*"},
-	//	AllowCredentials: true,
-	//	AllowedHeaders:   []string{"*"},
-	//	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
-	//	Debug:            true,
-	//})
-	//app.WrapRouter(c.ServeHTTP)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		Debug:            false,
+	})
+	app.WrapRouter(c.ServeHTTP)
 	app.Get("/stage-api/vue-element-admin/article/list", listData)
 	app.Get("/stage-api/vue-element-admin/user/info", userInfo)
 	app.Post("/stage-api/vue-element-admin/user/login", login)

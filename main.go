@@ -3,7 +3,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/snowlyg/go_darwin/protocol/router"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -11,16 +11,16 @@ import (
 
 	"github.com/go-cmd/cmd"
 	"github.com/kardianos/service"
-	log "github.com/sirupsen/logrus"
 	"github.com/snowlyg/go_darwin/client"
 	"github.com/snowlyg/go_darwin/configure"
 	"github.com/snowlyg/go_darwin/models"
 	"github.com/snowlyg/go_darwin/protocol/hls"
 	"github.com/snowlyg/go_darwin/protocol/httpflv"
+	"github.com/snowlyg/go_darwin/protocol/router"
 	"github.com/snowlyg/go_darwin/protocol/rtmp"
 )
 
-var VERSION = "master"
+var Version = "master"
 
 func startHls() *hls.Server {
 	hlsAddr := configure.Config.GetString("hls_addr")
@@ -33,10 +33,10 @@ func startHls() *hls.Server {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Error("HLS server panic: ", r)
+				log.Println("HLS server panic: ", r)
 			}
 		}()
-		log.Info("HLS listen On ", hlsAddr)
+		log.Println("HLS listen On ", hlsAddr)
 		hlsServer.Serve(hlsListen)
 	}()
 	return hlsServer
@@ -56,17 +56,17 @@ func startRtmp(stream *rtmp.RtmpStream, hlsServer *hls.Server) {
 
 	if hlsServer == nil {
 		rtmpServer = rtmp.NewRtmpServer(stream, nil)
-		log.Info("HLS server disable....")
+		log.Println("HLS server disable....")
 	} else {
 		rtmpServer = rtmp.NewRtmpServer(stream, hlsServer)
-		log.Info("HLS server enable....")
+		log.Println("HLS server enable....")
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("RTMP server panic: ", r)
+			log.Println("RTMP server panic: ", r)
 		}
 	}()
-	log.Info("RTMP Listen On ", rtmpAddr)
+	log.Println("RTMP Listen On ", rtmpAddr)
 	rtmpServer.Serve(rtmpListen)
 }
 
@@ -82,10 +82,10 @@ func startHTTPFlv(stream *rtmp.RtmpStream) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Error("HTTP-FLV server panic: ", r)
+				log.Println("HTTP-FLV server panic: ", r)
 			}
 		}()
-		log.Info("HTTP-FLV listen On ", httpflvAddr)
+		log.Println("HTTP-FLV listen On ", httpflvAddr)
 		hdlServer.Serve(flvListen)
 	}()
 }
@@ -95,16 +95,16 @@ func startAPI(stream *rtmp.RtmpStream) {
 	if apiAddr != "" {
 		opListen, err := net.Listen("tcp", apiAddr)
 		if err != nil {
-			log.Info(err)
+			log.Println(err)
 		}
 		opServer := router.NewServer(stream, rtmpAddr)
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {
-					log.Error("HTTP-API server panic: ", r)
+					log.Println("HTTP-API server panic: ", r)
 				}
 			}()
-			log.Info("HTTP-API listen On ", apiAddr)
+			log.Println("HTTP-API listen On ", apiAddr)
 			opServer.Serve(opListen)
 		}()
 	}
@@ -121,7 +121,7 @@ func startGo() {
 		for addChnOk || removeChnOk {
 			select {
 			case pusher, addChnOk = <-server.AddPusherCh:
-				log.Debugln("AddPusherCh:", pusher)
+				log.Println("AddPusherCh:", pusher)
 				if addChnOk {
 					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "localhost", pusher.Key)}
 					if strings.Contains(pusher.Path, "rtmp") {
@@ -215,22 +215,22 @@ func (p *program) Stop(s service.Service) error {
 	return nil
 }
 
-func init() {
-	// Log as JSON instead of the default ASCII formatter.
-	log.SetFormatter(&log.JSONFormatter{})
-
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
-	log.SetOutput(os.Stdout)
-
-	// Only log the warning severity or above.
-	log.SetLevel(log.WarnLevel)
-}
+//func init() {
+//	// Log as JSON instead of the default ASCII formatter.
+//	log.SetFormatter(&log.JSONFormatter{})
+//
+//	// Output to stdout instead of the default stderr
+//	// Can be any io.Writer, see below for File example
+//	log.SetOutput(os.Stdout)
+//
+//	// Only log the warning severity or above.
+//	log.SetLevel(log.WarnLevel)
+//}
 
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("live panic: ", r)
+			log.Println("live panic: ", r)
 			time.Sleep(1 * time.Second)
 		}
 	}()
@@ -245,7 +245,7 @@ func main() {
 
 ====================================================
 
-version: %s`, VERSION))
+version: %s`, Version))
 
 	svcConfig := &service.Config{
 		Name:        "godarwin",
@@ -256,19 +256,23 @@ version: %s`, VERSION))
 	prg := &program{}
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 	}
 
 	if len(os.Args) > 1 {
+		if os.Args[1] == "version" {
+			log.Println(Version)
+		}
+
 		err = service.Control(s, os.Args[1])
 		if err != nil {
-			log.Error(err)
+			log.Println(err)
 		}
 		return
 	}
 
 	err = s.Run()
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 	}
 }
