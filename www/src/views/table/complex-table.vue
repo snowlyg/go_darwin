@@ -377,7 +377,7 @@ export default {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const tempData = Object.assign({}, this.temp)
-          updateArticle(tempData, this.temp.id).then((res) => {
+          updateArticle(tempData, this.temp.ID).then((res) => {
             this.dialogFormVisible = false
             this.$notify({
               title: 'Success',
