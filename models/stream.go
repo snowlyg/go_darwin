@@ -60,7 +60,7 @@ func AddStream(source string) (*Stream, error) {
 	return &stream, nil
 }
 
-func UpdateStream(id uint, source string) error {
+func UpdateStream(id uint, source string) (*Stream, error) {
 	stream := Stream{Model: gorm.Model{ID: id}}
 	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), stream.RoomName)
 	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), stream.RoomName)
@@ -68,12 +68,13 @@ func UpdateStream(id uint, source string) error {
 
 	db.SQLite.Model(&stream).Updates(
 		Stream{
+			Status: false,
 			Source: source, FlvUrl: flvUrl,
 			HlsUrl:  hlsUrl,
 			RtmpUrl: rtmpUrl,
 		})
 
-	return nil
+	return &stream, nil
 }
 
 func StartStream(id uint) (*Stream, error) {

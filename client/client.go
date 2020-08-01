@@ -41,7 +41,7 @@ func GetServer() *Server {
 func (server *Server) AddPusher(pusher *Pusher) bool {
 	added := false
 	server.PushersLock.Lock()
-	_, ok := server.Pushers[pusher.Path]
+	_, ok := server.Pushers[pusher.Id]
 	if !ok {
 		server.Pushers[pusher.Path] = pusher
 		log.Printf("%v start, now pusher size[%d]", pusher, len(server.Pushers))

@@ -163,9 +163,16 @@ func update(ctx iris.Context) {
 		}
 	}
 	id := ctx.Params().GetUintDefault("id", 0)
-	err = models.UpdateStream(id, streamCreate.Source)
+	stream, err := models.UpdateStream(id, streamCreate.Source)
 	if err != nil {
 		req.Msg = err.Error()
+		ctx.JSON(req)
+		return
+	}
+
+	pusher := client.GetServer().GetPusher(stream.Source)
+	if pusher == nil {
+		req.Msg = "停止失败"
 		ctx.JSON(req)
 		return
 	}
@@ -189,7 +196,7 @@ func start(ctx iris.Context) {
 		return
 	}
 
-	pusher := client.GetServer().GetPusher(stream.Source)
+	pusher := client.GetServer().GetPusher(stream.RoomName)
 	if pusher == nil {
 		pusher = client.NewPusher(stream.Key, stream.Source, stream.RoomName)
 	}
@@ -223,7 +230,7 @@ func stop(ctx iris.Context) {
 		return
 	}
 
-	pusher := client.GetServer().GetPusher(stream.Source)
+	pusher := client.GetServer().GetPusher(stream.RoomName)
 	if pusher == nil {
 		req.Msg = "停止失败"
 		ctx.JSON(req)
