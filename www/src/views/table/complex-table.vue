@@ -268,7 +268,7 @@ export default {
       this.flvPlayer.pause()
     },
     close() {
-      this.flvPlayer.pause()
+      this.flvPlayer.destroy()
     },
     getList() {
       this.listLoading = true
