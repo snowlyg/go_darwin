@@ -41,8 +41,11 @@ type ServerCfg struct {
 	ConfigFile      string       `mapstructure:"config_file"`
 	FLVDir          string       `mapstructure:"flv_dir"`
 	RTMPAddr        string       `mapstructure:"rtmp_addr"`
+	PlayRTMPAddr    string       `mapstructure:"play_rtmp_addr"`
 	HTTPFLVAddr     string       `mapstructure:"httpflv_addr"`
+	PlayFLVAddr     string       `mapstructure:"play_flv_addr"`
 	HLSAddr         string       `mapstructure:"hls_addr"`
+	PlayHLSAddr     string       `mapstructure:"play_hls_addr"`
 	HLSKeepAfterEnd bool         `mapstructure:"hls_keep_after_end"`
 	APIAddr         string       `mapstructure:"api_addr"`
 	RedisAddr       string       `mapstructure:"redis_addr"`
@@ -59,8 +62,11 @@ var defaultConf = ServerCfg{
 	Level:           "debug",
 	ConfigFile:      "godarwin.yaml",
 	RTMPAddr:        ":1935",
+	PlayRTMPAddr:    ":1935",
 	HTTPFLVAddr:     ":7001",
+	PlayFLVAddr:     ":7001",
 	HLSAddr:         ":7002",
+	PlayHLSAddr:     ":7002",
 	HLSKeepAfterEnd: false,
 	APIAddr:         ":8090",
 	WriteTimeout:    10,

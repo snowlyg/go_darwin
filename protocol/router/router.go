@@ -171,7 +171,7 @@ func start(ctx iris.Context) {
 
 	pusher := client.GetServer().GetPusher(stream.Source)
 	if pusher == nil {
-		pusher = client.NewPusher(stream.Key, stream.Source, stream.PusherId)
+		pusher = client.NewPusher(stream.Key, stream.Source, stream.RoomName)
 	}
 
 	if pusher != nil {

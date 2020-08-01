@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/go-cmd/cmd"
-	"github.com/kardianos/service"
 	"github.com/snowlyg/go_darwin/client"
 	"github.com/snowlyg/go_darwin/configure"
 	"github.com/snowlyg/go_darwin/models"
@@ -123,9 +122,9 @@ func startGo() {
 			case pusher, addChnOk = <-server.AddPusherCh:
 				log.Println("AddPusherCh:", pusher)
 				if addChnOk {
-					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "localhost", pusher.Key)}
+					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
 					if strings.Contains(pusher.Path, "rtmp") {
-						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "localhost", pusher.Key)}
+						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Path), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
 					}
 
 					cmdOptions := cmd.Options{
@@ -189,44 +188,6 @@ func startGo() {
 	}()
 }
 
-type program struct{}
-
-func (p *program) Start(s service.Service) error {
-	// 非阻塞启动。异步执行
-	go p.run()
-	return nil
-}
-func (p *program) run() {
-	// 执行内容
-	err := models.Init()
-	if err != nil {
-		return
-	}
-
-	stream := rtmp.NewRtmpStream()
-	hlsServer := startHls()
-	startGo()
-	startHTTPFlv(stream)
-	startAPI(stream)
-	startRtmp(stream, hlsServer)
-}
-
-func (p *program) Stop(s service.Service) error {
-	return nil
-}
-
-//func init() {
-//	// Log as JSON instead of the default ASCII formatter.
-//	log.SetFormatter(&log.JSONFormatter{})
-//
-//	// Output to stdout instead of the default stderr
-//	// Can be any io.Writer, see below for File example
-//	log.SetOutput(os.Stdout)
-//
-//	// Only log the warning severity or above.
-//	log.SetLevel(log.WarnLevel)
-//}
-
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -247,32 +208,24 @@ func main() {
 
 version: %s`, Version))
 
-	svcConfig := &service.Config{
-		Name:        "godarwin",
-		DisplayName: "视频监控管理平台",
-		Description: "视频监控管理平台，支持 RTSP,RTMP,FLV,M3U8",
-	}
-
-	prg := &program{}
-	s, err := service.New(prg, svcConfig)
-	if err != nil {
-		log.Println(err)
-	}
-
 	if len(os.Args) > 1 {
 		if os.Args[1] == "version" {
 			log.Println(Version)
+			return
 		}
+	}
 
-		err = service.Control(s, os.Args[1])
-		if err != nil {
-			log.Println(err)
-		}
+	// 执行内容
+	err := models.Init()
+	if err != nil {
 		return
 	}
 
-	err = s.Run()
-	if err != nil {
-		log.Println(err)
-	}
+	stream := rtmp.NewRtmpStream()
+	hlsServer := startHls()
+	startGo()
+	startHTTPFlv(stream)
+	startAPI(stream)
+	startRtmp(stream, hlsServer)
+
 }

@@ -14,10 +14,12 @@ import (
 type Stream struct {
 	gorm.Model
 	Status   bool
-	PusherId string `gorm:"type:varchar(256)"`
 	RoomName string `gorm:"type:varchar(256);unique"`
 	Key      string `gorm:"type:varchar(256)"`
 	Source   string `gorm:"type:varchar(256)"`
+	FlvUrl   string `gorm:"type:varchar(256)"`
+	HlsUrl   string `gorm:"type:varchar(256)"`
+	RtmpUrl  string `gorm:"type:varchar(256)"`
 }
 
 func GetStreams(offset, limit int) ([]*Stream, int64) {
@@ -40,7 +42,18 @@ func GetStream(Sid string) (*Stream, error) {
 }
 
 func AddStream(source, roomName string) (*Stream, error) {
-	stream := Stream{Status: false, PusherId: uid.NewId(), RoomName: roomName, Source: source}
+	roomName = uid.NewId()
+	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), roomName)
+	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), roomName)
+	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.Get("play_rtmp_addr"), roomName)
+	stream := Stream{
+		Status:   false,
+		RoomName: roomName,
+		Source:   source,
+		FlvUrl:   flvUrl,
+		HlsUrl:   hlsUrl,
+		RtmpUrl:  rtmpUrl,
+	}
 	if err := db.SQLite.Create(&stream).Error; err != nil {
 		return nil, err
 	}

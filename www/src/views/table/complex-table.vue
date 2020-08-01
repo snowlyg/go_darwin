@@ -82,6 +82,11 @@
           <span class="link-type" @click="handleUpdate(row)">{{ row.Source }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="播放地址" min-width="150px">
+        <template slot-scope="{row}">
+          <span class="link-type" @click="handleUpdate(row)">{{ row.FlvUrl }}</span>
+        </template>
+      </el-table-column>
 
       <el-table-column label="状态" class-name="status-col" width="100">
         <template slot-scope="{row}">
@@ -128,10 +133,6 @@
         label-width="80px"
         style="width: 400px; margin-left:50px;"
       >
-
-        <el-form-item label="频道名称" prop="RoomName">
-          <el-input v-model="temp.RoomName" />
-        </el-form-item>
         <el-form-item label="拉流地址" prop="Source">
           <el-input v-model="temp.Source" />
         </el-form-item>
@@ -234,8 +235,7 @@ export default {
       statusOptions: ['published', 'draft', 'deleted'],
       showReviewer: false,
       temp: {
-        Source: '',
-        RoomName: ''
+        Source: ''
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -246,7 +246,6 @@ export default {
       dialogPvVisible: false,
       pvData: [],
       rules: {
-        RoomName: [{ required: true, message: '频道名称必填', trigger: 'blur' }],
         Source: [{ required: true, message: '拉流地址必填', trigger: 'blur' }]
       },
       downloadLoading: false,
@@ -362,7 +361,7 @@ export default {
       this.dialogPlayVisible = true
       if (flvPlayer.isSupported()) {
         this.flvPlayer = flvPlayer.createPlayer({
-          url: `http://localhost:7001/godarwin/${row.RoomName}.flv`,
+          url: row.FlvUrl,
           type: 'flv'
         })
       }
