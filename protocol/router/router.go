@@ -39,6 +39,7 @@ func (s *Server) Serve(l net.Listener) error {
 	app.Get("/stage-api/vue-element-admin/user/info", userInfo)
 	app.Post("/stage-api/vue-element-admin/user/login", login)
 	app.Post("/stage-api/vue-element-admin/article/create", create)
+	app.Post("/stage-api/vue-element-admin/article/{id:uint}", update)
 	app.Delete("/stage-api/vue-element-admin/article/{id:uint}", delete)
 	app.Get("/stage-api/vue-element-admin/article/start/{id:uint}", start)
 	app.Get("/stage-api/vue-element-admin/article/stop/{id:uint}", stop)
@@ -121,8 +122,7 @@ func userInfo(ctx iris.Context) {
 }
 
 type StreamCreate struct {
-	RoomName string `json:"roomName"`
-	Source   string `json:"source"`
+	Source string `json:"source"`
 }
 
 func create(ctx iris.Context) {
@@ -136,7 +136,7 @@ func create(ctx iris.Context) {
 		}
 	}
 
-	stream, err := models.AddStream(streamCreate.Source, streamCreate.RoomName)
+	stream, err := models.AddStream(streamCreate.Source)
 	if err != nil {
 		req.Msg = err.Error()
 		ctx.JSON(req)
@@ -150,7 +150,27 @@ func create(ctx iris.Context) {
 	}
 
 	ctx.JSON(req)
+}
 
+func update(ctx iris.Context) {
+	req := Req{nil, 20000, "编辑成功"}
+	var streamCreate StreamCreate
+	err := ctx.ReadJSON(&streamCreate)
+	if err != nil {
+		if !iris.IsErrPath(err) || err == iris.ErrEmptyForm {
+			ctx.StopWithError(iris.StatusInternalServerError, err)
+			return
+		}
+	}
+	id := ctx.Params().GetUintDefault("id", 0)
+	err = models.UpdateStream(id, streamCreate.Source)
+	if err != nil {
+		req.Msg = err.Error()
+		ctx.JSON(req)
+		return
+	}
+
+	ctx.JSON(req)
 }
 
 func start(ctx iris.Context) {

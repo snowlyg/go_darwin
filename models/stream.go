@@ -41,8 +41,8 @@ func GetStream(Sid string) (*Stream, error) {
 	return &stream, nil
 }
 
-func AddStream(source, roomName string) (*Stream, error) {
-	roomName = uid.NewId()
+func AddStream(source string) (*Stream, error) {
+	roomName := uid.NewId()
 	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), roomName)
 	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), roomName)
 	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.Get("play_rtmp_addr"), roomName)
@@ -60,13 +60,18 @@ func AddStream(source, roomName string) (*Stream, error) {
 	return &stream, nil
 }
 
-func UpdateStream(Sid, roomName, source string) error {
-	id, err := strconv.ParseUint(Sid, 10, 64)
-	if err != nil {
-		return err
-	}
-	stream := Stream{Model: gorm.Model{ID: uint(id)}}
-	db.SQLite.Model(&stream).Updates(Stream{RoomName: roomName, Source: source})
+func UpdateStream(id uint, source string) error {
+	stream := Stream{Model: gorm.Model{ID: id}}
+	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), stream.RoomName)
+	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), stream.RoomName)
+	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.Get("play_rtmp_addr"), stream.RoomName)
+
+	db.SQLite.Model(&stream).Updates(
+		Stream{
+			Source: source, FlvUrl: flvUrl,
+			HlsUrl:  hlsUrl,
+			RtmpUrl: rtmpUrl,
+		})
 
 	return nil
 }

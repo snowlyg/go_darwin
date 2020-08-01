@@ -45,9 +45,9 @@ export function createArticle(data) {
   })
 }
 
-export function updateArticle(data) {
+export function updateArticle(data, id) {
   return request({
-    url: '/vue-element-admin/article/update',
+    url: `/vue-element-admin/article/update/${id}`,
     method: 'post',
     data
   })
