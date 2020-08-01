@@ -61,23 +61,24 @@ func AddStream(source string) (*Stream, error) {
 }
 
 func UpdateStream(id uint, source string) (*Stream, error) {
-	stream := Stream{Model: gorm.Model{ID: id}}
+	stream := new(Stream)
+	if db.SQLite.Where("id = ?", id).First(stream).RecordNotFound() {
+		return nil, errors.New(fmt.Sprintf("拉流数据不存在, key：%v", stream))
+	}
 	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), stream.RoomName)
 	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), stream.RoomName)
 	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.Get("play_rtmp_addr"), stream.RoomName)
 
-	if err := db.SQLite.Model(&stream).Updates(
-		Stream{
-			Status:  false,
-			Source:  source,
-			FlvUrl:  flvUrl,
-			HlsUrl:  hlsUrl,
-			RtmpUrl: rtmpUrl,
-		}).Error; err != nil {
-		return nil, err
-	}
+	stream.Status = false
+	stream.Source = source
+	stream.FlvUrl = flvUrl
+	stream.HlsUrl = hlsUrl
+	stream.RtmpUrl = rtmpUrl
+	db.SQLite.Save(stream)
 
-	return &stream, nil
+	fmt.Println(stream, flvUrl)
+
+	return stream, nil
 }
 
 func StartStream(id uint) (*Stream, error) {
