@@ -166,6 +166,7 @@
         <el-button class="pan-btn blue-btn" @click="handleInit">初始化</el-button>
         <el-button class="pan-btn light-blue-btn" @click="play">播放</el-button>
         <el-button class="pan-btn pink-btn" @click="pause">暂停</el-button>
+        <el-button class="pan-btn pink-btn" @click="close">关闭</el-button>
       </span>
     </el-dialog>
   </div>
@@ -264,6 +265,9 @@ export default {
       this.flvPlayer.play()
     },
     pause() {
+      this.flvPlayer.pause()
+    },
+    close() {
       this.flvPlayer.pause()
     },
     getList() {
