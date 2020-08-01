@@ -172,10 +172,12 @@ func update(ctx iris.Context) {
 
 	pusher := client.GetServer().GetPusher(stream.Source)
 	if pusher == nil {
-		req.Msg = "停止失败"
+		req.Msg = "编辑失败"
 		ctx.JSON(req)
 		return
 	}
+	log.Debugln("room_name:", stream.RoomName, "key:", stream.Key, "room_id:", stream.ID)
+	client.GetServer().RemovePusher(pusher)
 
 	ctx.JSON(req)
 }

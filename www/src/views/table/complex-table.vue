@@ -378,6 +378,7 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp)
           updateArticle(tempData, this.temp.ID).then((res) => {
+            this.getList()
             this.dialogFormVisible = false
             this.$notify({
               title: 'Success',
