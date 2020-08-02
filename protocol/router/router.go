@@ -12,18 +12,21 @@ import (
 )
 
 type Server struct {
+	App *iris.Application
 }
 
 func NewServer(h av.Handler, rtmpAddr string) *Server {
-	return &Server{}
+	app := iris.Default()
+	return &Server{
+		App: app,
+	}
 }
 
 func (s *Server) Serve(l net.Listener) error {
-	app := iris.Default()
-	app.HandleDir("/static", iris.Dir("./www/dist/static"))
-	app.RegisterView(iris.HTML("./www/dist", ".html"))
+	s.App.HandleDir("/static", iris.Dir("./www/dist/static"))
+	s.App.RegisterView(iris.HTML("./www/dist", ".html"))
 
-	app.Get("/", func(ctx iris.Context) {
+	s.App.Get("/", func(ctx iris.Context) {
 		ctx.View("index.html")
 	})
 
@@ -34,17 +37,17 @@ func (s *Server) Serve(l net.Listener) error {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		Debug:            false,
 	})
-	app.WrapRouter(c.ServeHTTP)
-	app.Get("/stage-api/vue-element-admin/article/list", listData)
-	app.Get("/stage-api/vue-element-admin/user/info", userInfo)
-	app.Post("/stage-api/vue-element-admin/user/login", login)
-	app.Post("/stage-api/vue-element-admin/article/create", create)
-	app.Post("/stage-api/vue-element-admin/article/{id:uint}", update)
-	app.Delete("/stage-api/vue-element-admin/article/{id:uint}", delete)
-	app.Get("/stage-api/vue-element-admin/article/start/{id:uint}", start)
-	app.Get("/stage-api/vue-element-admin/article/stop/{id:uint}", stop)
+	s.App.WrapRouter(c.ServeHTTP)
+	s.App.Get("/stage-api/vue-element-admin/article/list", listData)
+	s.App.Get("/stage-api/vue-element-admin/user/info", userInfo)
+	s.App.Post("/stage-api/vue-element-admin/user/login", login)
+	s.App.Post("/stage-api/vue-element-admin/article/create", create)
+	s.App.Post("/stage-api/vue-element-admin/article/{id:uint}", update)
+	s.App.Delete("/stage-api/vue-element-admin/article/{id:uint}", delete)
+	s.App.Get("/stage-api/vue-element-admin/article/start/{id:uint}", start)
+	s.App.Get("/stage-api/vue-element-admin/article/stop/{id:uint}", stop)
 
-	err := app.Run(iris.Listener(l))
+	err := s.App.Run(iris.Listener(l))
 	if err != nil {
 		return err
 	}

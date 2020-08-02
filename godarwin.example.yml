@@ -1,0 +1,15 @@
+flv_dir: "./tmp"
+httpflvaddr: "localhost:7001"
+playflvaddr: "127.0.0.1:7001"
+rtmpaddr: "localhost:1935"
+playrtmp_ddr: "127.0.0.1:1935"
+readtimeout: 10
+writetimeout: 10
+gopnum: 1
+hlsaddr: "localhost:7002"
+playhlsaddr: "127.0.0.1:7002"
+apiaddr: "localhost:8090"
+server:
+  - appname: godarwin
+    live: true
+    hls: true

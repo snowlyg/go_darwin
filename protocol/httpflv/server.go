@@ -2,12 +2,11 @@ package httpflv
 
 import (
 	"encoding/json"
+	"github.com/snowlyg/go_darwin/av"
+	"github.com/snowlyg/go_darwin/protocol/rtmp"
 	"net"
 	"net/http"
 	"strings"
-
-	"github.com/snowlyg/go_darwin/av"
-	"github.com/snowlyg/go_darwin/protocol/rtmp"
 
 	log "github.com/sirupsen/logrus"
 )

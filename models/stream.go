@@ -43,9 +43,9 @@ func GetStream(Sid string) (*Stream, error) {
 
 func AddStream(source string) (*Stream, error) {
 	roomName := utils.MD5(uid.NewId())
-	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), roomName)
-	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), roomName)
-	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.Get("play_rtmp_addr"), roomName)
+	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.PlayFlvAddr, roomName)
+	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.PlayHlsAddr, roomName)
+	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.PlayRtmpAddr, roomName)
 	stream := Stream{
 		Status:   false,
 		RoomName: roomName,
@@ -65,9 +65,9 @@ func UpdateStream(id uint, source string) (*Stream, error) {
 	if db.SQLite.Where("id = ?", id).First(stream).RecordNotFound() {
 		return nil, errors.New(fmt.Sprintf("拉流数据不存在, key：%v", stream))
 	}
-	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.Get("play_flv_addr"), stream.RoomName)
-	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.Get("play_hls_addr"), stream.RoomName)
-	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.Get("play_rtmp_addr"), stream.RoomName)
+	flvUrl := fmt.Sprintf("http://%s/godarwin/%s.flv", configure.Config.PlayFlvAddr, stream.RoomName)
+	hlsUrl := fmt.Sprintf("http://%s/godarwin/%s.m3u8", configure.Config.PlayHlsAddr, stream.RoomName)
+	rtmpUrl := fmt.Sprintf("rtmp://%s/godarwin/%s", configure.Config.PlayRtmpAddr, stream.RoomName)
 
 	stream.Status = false
 	stream.Source = source

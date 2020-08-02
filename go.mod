@@ -7,6 +7,7 @@ require (
 	github.com/go-cmd/cmd v1.2.1
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/jander/golog v0.0.0-20150917071935-954a5be801fc
+	github.com/jinzhu/configor v1.2.0
 	github.com/jinzhu/gorm v1.9.15
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/kardianos/service v1.1.0

@@ -181,7 +181,7 @@ func (source *Source) cleanup() {
 
 func (source *Source) Close(err error) {
 	log.Debug("hls source closed: ", source.info)
-	if !source.closed && !configure.Config.GetBool("hls_keep_after_end") {
+	if !source.closed && !configure.Config.HlsKeepAfterEnd {
 		source.cleanup()
 	}
 	source.closed = true

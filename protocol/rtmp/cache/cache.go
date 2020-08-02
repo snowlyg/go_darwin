@@ -14,7 +14,7 @@ type Cache struct {
 
 func NewCache() *Cache {
 	return &Cache{
-		gop:      NewGopCache(configure.Config.GetInt("gop_num")),
+		gop:      NewGopCache(configure.Config.GopNum),
 		videoSeq: NewSpecialCache(),
 		audioSeq: NewSpecialCache(),
 		metadata: NewSpecialCache(),

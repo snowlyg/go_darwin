@@ -147,6 +147,8 @@ github.com/iris-contrib/schema v0.0.2 h1:qd3RU2sLPaTTamv6BGn+PDD5Gmny+i3jO8xDAmW
 github.com/iris-contrib/schema v0.0.2/go.mod h1:iYszG0IOsuIsfzjymw1kMzTL8YQcCWlm65f3wX8J5iA=
 github.com/jander/golog v0.0.0-20150917071935-954a5be801fc h1:l+v2jwOsGum32nR8cN1MxAtvUWQCIcQGm4WHwizaAbA=
 github.com/jander/golog v0.0.0-20150917071935-954a5be801fc/go.mod h1:uWhWXOR4dpfk9J8fegnMY7sP2GFXxe3PFI9Ps+TRXJs=
+github.com/jinzhu/configor v1.2.0 h1:u78Jsrxw2+3sGbGMgpY64ObKU4xWCNmNRJIjGVqxYQA=
+github.com/jinzhu/configor v1.2.0/go.mod h1:nX89/MOmDba7ZX7GCyU/VIaQ2Ar2aizBl2d3JLF/rDc=
 github.com/jinzhu/gorm v1.9.15 h1:OdR1qFvtXktlxk73XFYMiYn9ywzTwytqe4QkuMRqc38=
 github.com/jinzhu/gorm v1.9.15/go.mod h1:G3LB3wezTOWM2ITLzPxEXgSkOXAntiLHS7UdBefADcs=
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=

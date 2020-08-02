@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	readTimeout  = configure.Config.GetInt("read_timeout")
-	writeTimeout = configure.Config.GetInt("write_timeout")
+	readTimeout  = configure.Config.ReadTimeout
+	writeTimeout = configure.Config.WriteTimeout
 )
 
 type Client struct {

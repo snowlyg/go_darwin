@@ -83,7 +83,7 @@ func (server *Server) checkStop() {
 		<-time.After(5 * time.Second)
 		for item := range server.conns.IterBuffered() {
 			v := item.Val.(*Source)
-			if !v.Alive() && !configure.Config.GetBool("hls_keep_after_end") {
+			if !v.Alive() && !configure.Config.HlsKeepAfterEnd {
 				log.Debug("check stop and remove: ", v.Info())
 				server.conns.Remove(item.Key)
 			}
