@@ -73,9 +73,6 @@ func (p *program) startRtmp() {
 
 func (p *program) startHTTPFlv() {
 	httpflvAddr := configure.Config.HttpFlvAddr
-	//if len(httpflvAddr) == 0{
-	//	httpflvAddr = "0.0.0.0:7001"
-	//}
 
 	flvListen, err := net.Listen("tcp", httpflvAddr)
 	if err != nil {
@@ -128,8 +125,10 @@ func (p *program) startGo() {
 			case pusher, addChnOk = <-server.AddPusherCh:
 				logger.Println("AddPusherCh:", pusher)
 				if addChnOk {
-					args := []string{"-fflags", "genpts", "-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
-					if strings.Contains(pusher.Source, "rtmp") {
+					args := []string{"-re", "-fflags", "genpts", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-map", "0", "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+					if strings.Contains(pusher.Source, "rtsp://") {
+						args = []string{"-re", "-fflags", "genpts", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-map", "0", "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+					} else if strings.Contains(pusher.Source, "rtmp://") {
 						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
 					}
 					logger.Println(args)
@@ -223,7 +222,6 @@ func (p *program) Stop(s service.Service) error {
 
 func main() {
 
-	fmt.Println(configure.Config)
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Println("live panic: ", r)
@@ -279,7 +277,6 @@ version: %s`, Version))
 	prg.hlsServer = hlsServer
 
 	if len(os.Args) == 2 {
-
 		if os.Args[1] == "version" {
 			logger.Println(fmt.Sprintf("版本号：%s", Version))
 			return

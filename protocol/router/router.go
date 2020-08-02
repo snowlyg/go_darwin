@@ -44,6 +44,7 @@ func (s *Server) Serve(l net.Listener) error {
 	s.App.Post("/stage-api/vue-element-admin/article/create", create)
 	s.App.Post("/stage-api/vue-element-admin/article/{id:uint}", update)
 	s.App.Delete("/stage-api/vue-element-admin/article/{id:uint}", delete)
+	s.App.Get("/stage-api/vue-element-admin/article/{id:uint}", show)
 	s.App.Get("/stage-api/vue-element-admin/article/start/{id:uint}", start)
 	s.App.Get("/stage-api/vue-element-admin/article/stop/{id:uint}", stop)
 
@@ -177,6 +178,26 @@ func update(ctx iris.Context) {
 	if pusher != nil {
 		log.Debugln("room_name:", stream.RoomName, "key:", stream.Key, "room_id:", stream.ID)
 		client.GetServer().RemovePusher(pusher)
+	}
+
+	req.Data = stream
+	ctx.JSON(req)
+}
+
+func show(ctx iris.Context) {
+	req := Req{nil, 20000, "启动拉流"}
+	id := ctx.Params().GetUintDefault("id", 0)
+	stream, err := models.StartStream(id)
+	if err != nil {
+		req.Msg = err.Error()
+		ctx.JSON(req)
+		return
+	}
+
+	if stream == nil {
+		req.Msg = "流记录不存在"
+		ctx.JSON(req)
+		return
 	}
 
 	req.Data = stream

@@ -1,12 +1,18 @@
 package configure
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/jinzhu/configor"
 	"github.com/snowlyg/go_darwin/utils"
 )
+
+type server struct {
+	Appname    string   `default:"godarwin" env:"ServerAppname"`
+	Live       bool     `default:"true" env:"ServerLive"`
+	Hls        bool     `default:"true" env:"ServerHls"`
+	StaticPush []string `default:"" env:"ServerStaticpush"`
+}
 
 var Config = struct {
 	FlvDir          string `default:"./tmp" env:"flvdir"`
@@ -26,7 +32,7 @@ var Config = struct {
 		Pwd  string `default:"" env:"redispwd"`
 	}
 	Server []struct {
-		AppName    string   `default:"godarwin" env:"ServerAppname"`
+		Appname    string   `default:"godarwin" env:"ServerAppname"`
 		Live       bool     `default:"true" env:"ServerLive"`
 		Hls        bool     `default:"true" env:"ServerHls"`
 		StaticPush []string `default:"" env:"ServerStaticpush"`
@@ -35,15 +41,19 @@ var Config = struct {
 
 func init() {
 	configPath := filepath.Join(utils.CWD(), "godarwin.yml")
-	fmt.Println(configPath)
 	if err := configor.Load(&Config, configPath); err != nil {
 		panic(err)
 	}
+	//默认配置
+	//if Config.Server == nil {
+	//	server := server{"godarwin", true, true, nil}
+	//	Config.Server = append(Config.Server, &server)
+	//}
 }
 
 func CheckAppName(appname string) bool {
 	for _, server := range Config.Server {
-		if server.AppName == appname {
+		if server.Appname == appname {
 			return server.Live
 		}
 	}
@@ -52,7 +62,7 @@ func CheckAppName(appname string) bool {
 
 func GetStaticPushUrlList(appname string) ([]string, bool) {
 	for _, server := range Config.Server {
-		if (server.AppName == appname) && server.Live {
+		if (server.Appname == appname) && server.Live {
 			if len(server.StaticPush) > 0 {
 				return server.StaticPush, true
 			} else {

@@ -35,6 +35,20 @@ const tableRouter = {
       component: () => import('@/views/table/complex-table'),
       name: '拉流管理',
       meta: { title: '拉流管理' }
+    },
+    {
+      path: 'play/flv/:id(\\d+)',
+      component: () => import('@/views/table/flv'),
+      name: 'flv播放视频',
+      meta: { title: 'flv播放视频', noCache: true, activeMenu: '/table/complex-table' },
+      hidden: true
+    },
+    {
+      path: 'play/m3u8/:id(\\d+)',
+      component: () => import('@/views/table/m3u8'),
+      name: 'm3u8播放视频',
+      meta: { title: 'm3u8播放视频', noCache: true, activeMenu: '/table/complex-table' },
+      hidden: true
     }
   ]
 }

@@ -95,7 +95,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="400" class-name="small-padding fixed-width">
         <template slot-scope="{row,$index}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">
             编辑
@@ -103,9 +103,15 @@
           <el-button v-if="row.Status" size="mini" type="success" @click="handleStop(row)">
             停止
           </el-button>
-          <el-button v-if="row.Status" size="mini" type="warning" @click="handlePlay(row)">
-            播放
+
+          <el-button v-if="row.Status" type="primary" size="mini">
+            <router-link :to="'/table/play/flv/'+row.ID">FLV播放</router-link>
           </el-button>
+
+          <el-button v-if="row.Status" type="primary" size="mini">
+            <router-link :to="'/table/play/m3u8/'+row.ID">M3U8播放</router-link>
+          </el-button>
+
           <el-button v-if="!row.Status" size="mini" @click="handleStart(row)">
             启动
           </el-button>
@@ -154,19 +160,6 @@
       </el-table>
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="dialogPvVisible = false">Confirm</el-button>
-      </span>
-    </el-dialog>
-
-    <el-dialog :visible.sync="dialogPlayVisible" title="视频播放">
-      <div class="box-card">
-        <video id="videoElement" controls="true" height="100%" width="100%" />
-      </div>
-
-      <span slot="footer" class="dialog-footer">
-        <el-button class="pan-btn blue-btn" @click="handleInit">初始化</el-button>
-        <el-button class="pan-btn light-blue-btn" @click="play">播放</el-button>
-        <el-button class="pan-btn pink-btn" @click="pause">暂停</el-button>
-        <el-button class="pan-btn pink-btn" @click="close">关闭</el-button>
       </span>
     </el-dialog>
   </div>
@@ -261,15 +254,6 @@ export default {
 
   },
   methods: {
-    play() {
-      this.flvPlayer.play()
-    },
-    pause() {
-      this.flvPlayer.pause()
-    },
-    close() {
-      this.flvPlayer.destroy()
-    },
     getList() {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
@@ -360,15 +344,6 @@ export default {
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
-    },
-    handlePlay(row) {
-      this.dialogPlayVisible = true
-      if (flvPlayer.isSupported()) {
-        this.flvPlayer = flvPlayer.createPlayer({
-          url: row.FlvUrl,
-          type: 'flv'
-        })
-      }
     },
     handleInit() {
       if (this.dialogPlayVisible && flvPlayer.isSupported()) {

@@ -20,6 +20,8 @@ import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
 
+import 'video.js/dist/video-js.css'
+
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

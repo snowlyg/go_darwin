@@ -99,6 +99,9 @@ func (server *Server) handle(w http.ResponseWriter, r *http.Request) {
 	}
 	switch path.Ext(r.URL.Path) {
 	case ".m3u8":
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Content-Type", "application/x-mpegURL")
 		key, _ := server.parseM3u8(r.URL.Path)
 		conn := server.getConn(key)
 		if conn == nil {
@@ -117,12 +120,17 @@ func (server *Server) handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Content-Type", "application/x-mpegURL")
 		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
-		w.Write(body)
+		_, err = w.Write(body)
+		if err != nil {
+			log.Debug("Content-Length error: ", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	case ".ts":
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Content-Type", "video/mp2ts")
+
 		key, _ := server.parseTs(r.URL.Path)
 		conn := server.getConn(key)
 		if conn == nil {
@@ -136,10 +144,14 @@ func (server *Server) handle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Content-Type", "video/mp2ts")
 		w.Header().Set("Content-Length", strconv.Itoa(len(item.Data)))
-		w.Write(item.Data)
+		_, err = w.Write(item.Data)
+		if err != nil {
+			log.Debug("Content-Length error: ", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 	}
 }
 
