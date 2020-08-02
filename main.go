@@ -129,22 +129,18 @@ func startGo() {
 			case pusher, addChnOk = <-server.AddPusherCh:
 				logger.Println("AddPusherCh:", pusher)
 				if addChnOk {
-					args := []string{"-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+					args := []string{"-fflags", "genpts", "-re", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
 					if strings.Contains(pusher.Source, "rtmp") {
 						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
 					}
-
 					logger.Println(args)
-
 					cmdOptions := cmd.Options{
 						Buffered:  true,
 						Streaming: true,
 					}
 
 					envCmd := cmd.NewCmdOptions(cmdOptions, "ffmpeg", args...)
-					doneChan := make(chan struct{})
 					go func() {
-						defer close(doneChan)
 						for envCmd.Stdout != nil || envCmd.Stderr != nil {
 							select {
 							case line, open := <-envCmd.Stdout:
@@ -163,8 +159,7 @@ func startGo() {
 						}
 					}()
 
-					<-envCmd.Start()
-					<-doneChan
+					envCmd.Start()
 				} else {
 					logger.Printf("addPusherChan closed")
 				}
@@ -213,10 +208,10 @@ func (p *program) run() {
 
 	stream := rtmp.NewRtmpStream()
 	hlsServer := startHls()
-	go startGo()
-	go startHTTPFlv(stream)
-	go startAPI(stream)
-	go startRtmp(stream, hlsServer)
+	startGo()
+	startHTTPFlv(stream)
+	startAPI(stream)
+	startRtmp(stream, hlsServer)
 }
 
 func (p *program) Stop(s service.Service) error {
