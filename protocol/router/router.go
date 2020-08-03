@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/kataras/iris/v12"
 	"github.com/rs/cors"
-	//"github.com/rs/cors"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/snowlyg/go_darwin/av"
 	"github.com/snowlyg/go_darwin/client"

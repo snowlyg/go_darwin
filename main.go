@@ -3,36 +3,39 @@ package main
 
 import (
 	"fmt"
-	"github.com/snowlyg/go_darwin/models"
 	"net"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/go-cmd/cmd"
-	"github.com/jander/golog/logger"
 	"github.com/kardianos/service"
+	logger "github.com/sirupsen/logrus"
 	"github.com/snowlyg/go_darwin/client"
 	"github.com/snowlyg/go_darwin/configure"
+	"github.com/snowlyg/go_darwin/models"
 	"github.com/snowlyg/go_darwin/protocol/hls"
 	"github.com/snowlyg/go_darwin/protocol/httpflv"
 	"github.com/snowlyg/go_darwin/protocol/router"
 	"github.com/snowlyg/go_darwin/protocol/rtmp"
-	"github.com/snowlyg/go_darwin/utils"
 )
 
 func init() {
-	rotatingHandler := logger.NewRotatingHandler(utils.LogDir(), "log.log", 4, 4*1024*1024)
-	logger.SetHandlers(logger.Console, rotatingHandler)
+	// Log as JSON instead of the default ASCII formatter.
+	logger.SetFormatter(&logger.JSONFormatter{})
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	logger.SetOutput(os.Stdout)
+
+	// Only log the warning severity or above.
+	logger.SetLevel(logger.WarnLevel)
 }
 
 var Version = "master"
 
 func (p *program) startHls() {
 	hlsAddr := configure.Config.HlsAddr
-	if len(hlsAddr) == 0 {
-		hlsAddr = "0.0.0.0:7002"
-	}
 	hlsListen, err := net.Listen("tcp", hlsAddr)
 	if err != nil {
 		logger.Error(err)
@@ -53,9 +56,6 @@ var rtmpAddr string
 
 func (p *program) startRtmp() {
 	rtmpAddr = configure.Config.RtmpAddr
-	//if len(rtmpAddr) == 0{
-	//	rtmpAddr = "0.0.0.0:1935"
-	//}
 
 	rtmpListen, err := net.Listen("tcp", rtmpAddr)
 	if err != nil {
@@ -92,9 +92,6 @@ func (p *program) startHTTPFlv() {
 
 func (p *program) startAPI() {
 	apiAddr := configure.Config.ApiAddr
-	//if len(apiAddr) == 0{
-	//	apiAddr = "127.0.0.1:8090"
-	//}
 	if apiAddr != "" {
 		opListen, err := net.Listen("tcp", apiAddr)
 		if err != nil {
