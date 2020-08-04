@@ -145,24 +145,24 @@ func (p *program) startGo() {
 					}
 
 					envCmd := cmd.NewCmdOptions(cmdOptions, "ffmpeg", args...)
-					go func() {
-						for envCmd.Stdout != nil || envCmd.Stderr != nil {
-							select {
-							case line, open := <-envCmd.Stdout:
-								if !open {
-									envCmd.Stdout = nil
-									continue
-								}
-								logger.Println(line)
-							case line, open := <-envCmd.Stderr:
-								if !open {
-									envCmd.Stderr = nil
-									continue
-								}
-								logger.Println(os.Stderr, line)
-							}
-						}
-					}()
+					//go func() {
+					//	for envCmd.Stdout != nil || envCmd.Stderr != nil {
+					//		select {
+					//		case line, open := <-envCmd.Stdout:
+					//			if !open {
+					//				envCmd.Stdout = nil
+					//				continue
+					//			}
+					//			logger.Println(line)
+					//		case line, open := <-envCmd.Stderr:
+					//			if !open {
+					//				envCmd.Stderr = nil
+					//				continue
+					//			}
+					//			logger.Println(os.Stderr, line)
+					//		}
+					//	}
+					//}()
 
 					envCmd.Start()
 				} else {
