@@ -2,7 +2,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/snowlyg/go_darwin/utils"
 	"net"
 	"os"
 	"strings"
@@ -20,19 +22,15 @@ import (
 	"github.com/snowlyg/go_darwin/protocol/rtmp"
 )
 
-func init() {
-	// Log as JSON instead of the default ASCII formatter.
-	logger.SetFormatter(&logger.JSONFormatter{})
-
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
-	logger.SetOutput(os.Stdout)
-
-	// Only log the warning severity or above.
-	logger.SetLevel(logger.WarnLevel)
-}
-
 var Version = "master"
+var f *os.File
+
+func init() {
+	f, _ := os.OpenFile(utils.LogDir()+"/log.log", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	logger.SetFormatter(&logger.JSONFormatter{})
+	logger.SetOutput(f)
+	logger.SetLevel(logger.DebugLevel)
+}
 
 func (p *program) startHls() {
 	hlsAddr := configure.Config.HlsAddr
@@ -212,7 +210,24 @@ func (p *program) run() {
 	p.startRtmp()
 }
 
+func (p *program) stopAPI() (err error) {
+	if p.apiServer == nil {
+		err = fmt.Errorf("HTTP Server Not Found")
+		return
+	}
+
+	timeout := 5 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	p.apiServer.App.Shutdown(ctx)
+	return
+}
+
 func (p *program) Stop(s service.Service) error {
+	defer logger.Println("退出服务")
+	defer f.Close()
+
+	p.stopAPI()
 	models.Close()
 	return nil
 }
