@@ -33,52 +33,31 @@ export default {
     this.fetchData(id)
   },
   mounted() {
-    var video = document.getElementById('hlsVideo')
-    if (Hls.isSupported()) {
-      var hls = new Hls()
-      hls.loadSource(this.stream.HlsUrl)
-      hls.attachMedia(video)
-      hls.on(Hls.Events.MANIFEST_PARSED, function() {
-        video.play()
-      })
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = this.stream.HlsUrl
-      video.addEventListener('loadedmetadata', function() {
-        video.play()
-      })
-    }
+
   },
   methods: {
     fetchData(id) {
       fetchArticle(id).then(response => {
         this.stream = response.data
+        var video = document.getElementById('hlsVideo')
+        if (Hls.isSupported()) {
+          var hls = new Hls()
+          hls.loadSource(this.stream.HlsUrl)
+          hls.attachMedia(video)
+          hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play()
+          })
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = this.stream.HlsUrl
+          video.addEventListener('loadedmetadata', function() {
+            video.play()
+          })
+        }
       }).catch(err => {
         console.log(err)
       })
-    },
-    destroyHls: function() {
-      if (this.hls) {
-        this.$refs.hlsVideo.pause()
-        this.hls.destroy()
-        this.hls = null
-      }
-    },
-    loadVideoFn: function() {
-      if (Hls.isSupported()) {
-        this.hls = new Hls()
-        this.hls.loadSource(this.stream.HlsUrl) // CCTV1直播源
-        this.hls.attachMedia(this.$refs.hlsVideo)
-        this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log('加载成功')
-          this.$refs.hlsVideo.play()
-        })
-        this.hls.on(Hls.Events.ERROR, (event, data) => {
-          // console.log(event, data);
-          // 监听出错事件
-          console.log('加载失败')
-        })
-      }
     }
+
   }
 }
 </script>
