@@ -6,6 +6,7 @@
 /logs
 
 go_darwin.*
+godarwin_*
 protocol/api/assets.go
 protocol/router/assets.go
 godarwin.yml
