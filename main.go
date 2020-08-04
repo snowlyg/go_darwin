@@ -240,8 +240,8 @@ version: %s`, Version))
 
 	svcConfig := &service.Config{
 		Name:        "godarwin",
-		DisplayName: "Go Service Example",
-		Description: "This is an example Go service.",
+		DisplayName: "GoDarwin",
+		Description: "音视频拉流服务",
 	}
 
 	prg := &program{}
