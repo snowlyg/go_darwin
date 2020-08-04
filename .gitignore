@@ -5,12 +5,10 @@
 /tmp
 /logs
 
-go_darwin
 go_darwin.*
 protocol/api/assets.go
 protocol/router/assets.go
-godarwin.yaml
-godarwin
+godarwin.yml
 
 *.exe
 *.db

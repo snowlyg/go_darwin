@@ -1,5 +1,20 @@
 # go_darwin
 
+#### 后端参考项目
+[livego](https://github.com/gwuhaolin/livego)
+
+#### 注意
+- 需要安装 ffmepg
+
+####
+```shell script
+.\go_darwin.exe install
+.\go_darwin.exe start
+.\go_darwin.exe stop
+.\go_darwin.exe restart
+.\go_darwin.exe uninstall
+```
+
 #### 前端文档
 [vue-element-admin-site](https://panjiachen.github.io/vue-element-admin-site/guide)
 

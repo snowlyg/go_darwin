@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/snowlyg/go_darwin/utils"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -24,9 +25,10 @@ import (
 
 var Version = "master"
 var f *os.File
+var rtmpAddr string
 
 func init() {
-	f, _ := os.OpenFile(utils.LogDir()+"/log.log", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	f, _ := os.OpenFile(fmt.Sprintf("%s/log.log", utils.LogDir()), os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 	logger.SetFormatter(&logger.JSONFormatter{})
 	logger.SetOutput(f)
 	logger.SetLevel(logger.DebugLevel)
@@ -46,11 +48,12 @@ func (p *program) startHls() {
 			}
 		}()
 		logger.Println("HLS listen On ", hlsAddr)
-		p.hlsServer.Serve(hlsListen)
+		err = p.hlsServer.Serve(hlsListen)
+		if err != nil {
+			logger.Println("HLS listen Err :", err)
+		}
 	}()
 }
-
-var rtmpAddr string
 
 func (p *program) startRtmp() {
 	rtmpAddr = configure.Config.RtmpAddr
@@ -66,7 +69,10 @@ func (p *program) startRtmp() {
 		}
 	}()
 	logger.Println("RTMP Listen On ", rtmpAddr)
-	p.rtmpServer.Serve(rtmpListen)
+	err = p.rtmpServer.Serve(rtmpListen)
+	if err != nil {
+		logger.Println("RTMP listen Err :", err)
+	}
 }
 
 func (p *program) startHTTPFlv() {
@@ -84,7 +90,10 @@ func (p *program) startHTTPFlv() {
 			}
 		}()
 		logger.Println("HTTP-FLV listen On ", httpflvAddr)
-		p.flvServer.Serve(flvListen)
+		err := p.flvServer.Serve(flvListen)
+		if err != nil {
+			logger.Println("HTTP-FLV listen Err :", err)
+		}
 	}()
 }
 
@@ -102,7 +111,10 @@ func (p *program) startAPI() {
 				}
 			}()
 			logger.Println("HTTP-API listen On ", apiAddr)
-			p.apiServer.Serve(opListen)
+			err := p.apiServer.Serve(opListen)
+			if err != nil {
+				logger.Println("HTTP-API listen Err :", err)
+			}
 		}()
 	}
 }
@@ -233,15 +245,7 @@ func (p *program) Stop(s service.Service) error {
 }
 
 func main() {
-
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Println("live panic: ", r)
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	logger.Println(fmt.Sprintf(` 
+	log.Println(fmt.Sprintf(` 
 ====================================================
   ____  ___  ____    _    ______        _____ _   _ 
  / ___|/ _ \|  _ \  / \  |  _ \ \      / /_ _| \ | |

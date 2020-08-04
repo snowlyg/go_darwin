@@ -1,8 +1,10 @@
 package router
 
 import (
+	"fmt"
 	"github.com/kataras/iris/v12"
 	"github.com/rs/cors"
+	"github.com/snowlyg/go_darwin/utils"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/snowlyg/go_darwin/av"
@@ -23,8 +25,8 @@ func NewServer(h av.Handler, rtmpAddr string) *Server {
 }
 
 func (s *Server) Serve(l net.Listener) error {
-	s.App.HandleDir("/static", iris.Dir("./www/dist/static"))
-	s.App.RegisterView(iris.HTML("./www/dist", ".html"))
+	s.App.HandleDir("/static", iris.Dir(fmt.Sprintf("%s/www/dist/static", utils.CWD())))
+	s.App.RegisterView(iris.HTML(fmt.Sprintf("%s/www/dist", utils.CWD()), ".html"))
 
 	s.App.Get("/", func(ctx iris.Context) {
 		ctx.View("index.html")
