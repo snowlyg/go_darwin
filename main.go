@@ -132,11 +132,69 @@ func (p *program) startGo() {
 			case pusher, addChnOk = <-server.AddPusherCh:
 				logger.Println("AddPusherCh:", pusher)
 				if addChnOk {
-					args := []string{"-re", "-fflags", "genpts", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-map", "0", "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+					args := []string{
+						"-re",
+						"-rtbufsize",
+						"30412800",
+						"-r", //帧率
+						"30",
+						"-fflags", "genpts",
+						"-rtsp_transport", "tcp",
+						"-i", fmt.Sprintf("%s", pusher.Source),
+						"-map", "0",
+						"-c", "copy",
+						"-max_delay",
+						"100",
+						"-preset:v",
+						"ultrafast",
+						"-tune:v",
+						"zerolatency",
+						"-g",
+						"5",
+						"-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key),
+					}
 					if strings.Contains(pusher.Source, "rtsp://") {
-						args = []string{"-re", "-fflags", "genpts", "-rtsp_transport", "tcp", "-i", fmt.Sprintf("%s", pusher.Source), "-map", "0", "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+						args = []string{
+							"-re",
+							"-rtbufsize",
+							"30412800",
+							"-r", //帧率
+							"30",
+							"-fflags", "genpts",
+							"-rtsp_transport", "tcp",
+							"-i", fmt.Sprintf("%s", pusher.Source),
+							"-map", "0",
+							"-c", "copy",
+							"-max_delay",
+							"100",
+							"-preset:v",
+							"ultrafast",
+							"-tune:v",
+							"zerolatency",
+							"-g",
+							"5",
+							"-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key),
+						}
 					} else if strings.Contains(pusher.Source, "rtmp://") {
-						args = []string{"-re", "-i", fmt.Sprintf("%s", pusher.Source), "-c", "copy", "-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key)}
+						args = []string{
+							"-re",
+							"-rtbufsize",
+							"30412800",
+							"-r", //帧率
+							"30",
+							"-fflags", "genpts",
+							"-i", fmt.Sprintf("%s", pusher.Source),
+							"-c", "copy",
+							"-max_delay",
+							"100",
+							"-preset:v",
+							"ultrafast",
+							"-tune:v",
+							"zerolatency",
+							"-g",
+							"5",
+							"-f", "flv", fmt.Sprintf("rtmp://%s:1935/godarwin/%s", "127.0.0.1", pusher.Key),
+						}
 					}
 					logger.Println(args)
 					cmdOptions := cmd.Options{
